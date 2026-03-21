@@ -1,0 +1,4 @@
+# Handled by root .gitignore — keeping this for Vite-specific extras
+*.local
+dist/
+dist-ssr/
