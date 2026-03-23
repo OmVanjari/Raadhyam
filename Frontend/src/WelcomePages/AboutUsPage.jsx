@@ -448,7 +448,7 @@ const AboutUs = () => {
             </section>
 
             {/* ══ STATUS BANNER ══════════════════════════════════════════════════ */}
-            <section style={{ background: '#FFFBEB', borderBottom: '1px solid rgba(220,38,38,0.12)', padding: '0.9rem 0' }}>
+            <section style={{ background: '#fff', borderBottom: '1px solid rgba(217,119,6,0.12)', padding: '0.9rem 0' }}>
                 <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#16a34a', display: 'inline-block', animation: 'pulseGreen 2s ease infinite' }} />
@@ -465,7 +465,7 @@ const AboutUs = () => {
             </section>
 
             {/* ══ STATS ══════════════════════════════════════════════════════════ */}
-            <section style={{ padding: '5rem 0', background: warmBg, position: 'relative' }}>
+            <section style={{ padding: '5rem 0', background: '#F8FAFC', position: 'relative' }}>
                 <div style={dotPattern} />
                 <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 2rem', position: 'relative' }}>
                     <SectionHeading tag="🎵 By the Numbers" title="Raadhyam in Numbers" subtitle="A decade of musical excellence, student success, and community impact." />
@@ -516,7 +516,7 @@ const AboutUs = () => {
             </section>
 
             {/* ══ INSTRUMENTS ════════════════════════════════════════════════════ */}
-            <section style={{ padding: '5rem 0', background: warmBg, position: 'relative' }}>
+            <section style={{ padding: '5rem 0', background: '#F8FAFC', position: 'relative' }}>
                 <div style={dotPattern} />
                 <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 2rem', position: 'relative' }}>
                     <SectionHeading tag="🎸 What We Teach" title="Instruments We Teach" subtitle="Comprehensive training in 25+ instruments across various musical traditions." />
@@ -551,7 +551,7 @@ const AboutUs = () => {
             </section>
 
             {/* ══ MISSION & VISION ═══════════════════════════════════════════════ */}
-            <section style={{ padding: '5rem 0', background: warmBg, position: 'relative' }}>
+            <section style={{ padding: '5rem 0', background: '#F8FAFC', position: 'relative' }}>
                 <div style={dotPattern} />
                 <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 2rem', position: 'relative' }}>
                     <SectionHeading tag="🎯 Purpose" title="Our Mission & Vision" subtitle="We believe that everyone has musical potential waiting to be discovered." />
@@ -577,7 +577,7 @@ const AboutUs = () => {
             </section>
 
             {/* ══ TEAM ═══════════════════════════════════════════════════════════ */}
-            <section style={{ padding: '5rem 0', background: warmBg, position: 'relative' }}>
+            <section style={{ padding: '5rem 0', background: '#F8FAFC', position: 'relative' }}>
                 <div style={dotPattern} />
                 <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 2rem', position: 'relative' }}>
                     <SectionHeading tag="👥 The Team" title="Meet Our Founders" subtitle="The passionate musicians behind Raadhyam." />
@@ -619,7 +619,7 @@ const AboutUs = () => {
             </section>
 
             {/* ══ CTA ════════════════════════════════════════════════════════════ */}
-            <section style={{ padding: '5rem 0', background: warmBg, position: 'relative', overflow: 'hidden' }}>
+            <section style={{ padding: '5rem 0', background: '#F8FAFC', position: 'relative', overflow: 'hidden' }}>
                 <div style={dotPattern} />
                 <div style={{ position: 'absolute', top: -80, right: -80, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, rgba(220,38,38,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
                 <div style={{ maxWidth: 800, margin: '0 auto', padding: '0 2rem', textAlign: 'center', position: 'relative', zIndex: 2 }}>
