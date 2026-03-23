@@ -14,6 +14,7 @@ import ContactPage from './WelcomePages/Contect'
 import CoursesPage from './WelcomePages/CoursesPage'
 import MusicNotesPage from './WelcomePages/NotesPage'
 import MainDashboardAdmin from './AdminDashboard/AdminMain'
+import UserMain from './UserDashboard/UserMain'
 
 function App() {
 
@@ -28,6 +29,7 @@ function App() {
 
 
         <Route path="/dashboard/admin" element={<MainDashboardAdmin />} />
+        <Route path="/dashboard/home" element={<UserMain />} />
 
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />

@@ -193,11 +193,11 @@ const LoginPage = () => {
       </div>
 
       {/* Card */}
-      <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'90px 1rem 2rem' }}>
+      <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'90px 1rem 3rem' }}>
         <div style={{ background:'#fff', borderRadius:24, boxShadow:'0 24px 80px rgba(217,119,6,0.14), 0 4px 24px rgba(30,41,59,0.08)', padding:'2.5rem', width:'100%', maxWidth:460, animation:'fadeUp 0.5s ease both', border:'1px solid rgba(217,119,6,0.15)' }}>
 
           {/* Header */}
-          <div style={{ textAlign:'center', marginBottom:'2rem' }}>
+          <div style={{ textAlign:'center', marginBottom:'1.5rem' }}>
             <div style={{ width:72, height:72, borderRadius:'50%', background:'linear-gradient(135deg,#D97706,#B45309)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 1rem', boxShadow:'0 8px 24px rgba(217,119,6,0.35)', fontSize:'2rem' }}>🎵</div>
             <h1 style={{ fontFamily:SERIF, fontSize:'2rem', fontWeight:700, color:'#1E293B', marginBottom:6 }}>Welcome Back</h1>
             <p style={{ color:'#64748B', fontSize:'0.9rem' }}>Sign in to continue your musical journey</p>
@@ -216,7 +216,7 @@ const LoginPage = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:'1.1rem' }}>
+          <form onSubmit={handleSubmit} style={{ display:'flex', flexDirection:'column', gap:'0.9rem' }}>
             {/* Email */}
             <div>
               <label style={labelStyle}>✉ Email Address</label>
@@ -258,6 +258,25 @@ const LoginPage = () => {
             {/* Forgot */}
             <div style={{ textAlign:'right', marginTop:-4 }}>
               <a href="/forgot-password" style={{ fontSize:'0.8rem', color:'#D97706', fontWeight:700, textDecoration:'none' }}>Forgot password?</a>
+            </div>
+
+            {/* Demo buttons */}
+            <div>
+              <p style={{ fontSize:'0.72rem', fontWeight:700, color:'#94A3B8', letterSpacing:'0.1em', textTransform:'uppercase', textAlign:'center', marginBottom:8, fontFamily:SANS }}>⚡ Quick Demo Access</p>
+              <div style={{ display:'flex', gap:10 }}>
+                <button type="button" onClick={() => { window.location.href = '/dashboard/admin'; }}
+                  style={{ flex:1, padding:'10px', borderRadius:10, border:'1.5px solid #D97706', background:'rgba(217,119,6,0.07)', color:'#B45309', fontSize:'0.82rem', fontWeight:700, cursor:'pointer', fontFamily:SANS, transition:'background 0.2s' }}
+                  onMouseEnter={e=>e.currentTarget.style.background='rgba(217,119,6,0.15)'}
+                  onMouseLeave={e=>e.currentTarget.style.background='rgba(217,119,6,0.07)'}>
+                  🛡 Demo Admin
+                </button>
+                <button type="button" onClick={() => { window.location.href = '/dashboard/home'; }}
+                  style={{ flex:1, padding:'10px', borderRadius:10, border:'1.5px solid #1E293B', background:'rgba(30,41,59,0.05)', color:'#1E293B', fontSize:'0.82rem', fontWeight:700, cursor:'pointer', fontFamily:SANS, transition:'background 0.2s' }}
+                  onMouseEnter={e=>e.currentTarget.style.background='rgba(30,41,59,0.12)'}
+                  onMouseLeave={e=>e.currentTarget.style.background='rgba(30,41,59,0.05)'}>
+                  🎵 Demo User
+                </button>
+              </div>
             </div>
 
             {/* Submit */}
