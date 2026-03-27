@@ -32,152 +32,124 @@ const DashboardLayout = ({ children, activeTab, setActiveTab }) => {
     navigate('/');
   };
 
+  const adminData = (() => {
+    try {
+      return JSON.parse(localStorage.getItem('userData') || '{}');
+    } catch {
+      return {};
+    }
+  })();
+
+  const SidebarContent = ({ mobile = false }) => (
+    <>
+      <div className="px-5 pt-6 pb-4 border-b border-amber-600/20">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-slate-900 shadow-lg shadow-amber-500/30">
+            <BookOpen className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-lg font-bold text-white">Raadhyam</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-amber-300">Admin Dashboard</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 py-4">
+        <button
+          onClick={handleGoHome}
+          className="w-full rounded-xl border border-amber-500/25 bg-white/5 px-3 py-2.5 text-left text-sm font-medium text-slate-200 transition hover:border-amber-400/50 hover:bg-white/10"
+        >
+          <span className="flex items-center gap-2">
+            <Home size={16} /> Back to Website
+          </span>
+        </button>
+      </div>
+
+      <nav className="flex-1 px-3 pb-4">
+        <p className="px-3 pb-2 text-[11px] uppercase tracking-[0.18em] text-slate-400">Navigation</p>
+        <div className="space-y-1.5">
+          {navigation.map((item) => {
+            const active = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  if (mobile) setSidebarOpen(false);
+                }}
+                className={`group w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
+                  active
+                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 shadow-md shadow-amber-500/35'
+                    : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <span className="flex items-center gap-2.5">
+                  <item.icon className={`h-4.5 w-4.5 ${active ? 'text-slate-900' : 'text-slate-400 group-hover:text-amber-300'}`} />
+                  {item.name}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
+      <div className="m-3 rounded-xl border border-white/10 bg-white/5 p-3">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-sm font-bold text-slate-900">
+            {(adminData.name || adminData.email || 'A').charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-slate-100">{adminData.name || 'Admin User'}</p>
+            <p className="truncate text-xs text-slate-400">{adminData.email || 'admin@raadhyam.com'}</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-red-500/15 hover:text-red-300"
+            title="Logout"
+          >
+            <LogOut size={16} />
+          </button>
+        </div>
+      </div>
+    </>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-100">
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_12%_20%,rgba(217,119,6,0.16),transparent_30%),radial-gradient(circle_at_88%_8%,rgba(15,23,42,0.12),transparent_28%)]" />
+
       {/* Mobile Sidebar */}
       {sidebarOpen && (
-        <div className="fixed inset-0 flex z-40 md:hidden">
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
+        <div className="fixed inset-0 z-50 flex md:hidden">
+          <div className="fixed inset-0 bg-slate-950/55 backdrop-blur-[1px]" onClick={() => setSidebarOpen(false)}></div>
           
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
-            <div className="absolute top-0 right-0 -mr-12 pt-2">
+          <div className="relative flex h-full w-full max-w-[280px] flex-col bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-2xl">
+            <div className="absolute right-2 top-2">
               <button
-                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-slate-300 transition hover:bg-white/10 hover:text-white"
                 onClick={() => setSidebarOpen(false)}
               >
-                <X className="h-6 w-6 text-white" />
+                <X className="h-5 w-5" />
               </button>
             </div>
-            
-            <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
-              <div className="flex-shrink-0 flex items-center px-4">
-                <BookOpen className="h-8 w-8 text-blue-600" />
-                <span className="ml-2 text-xl font-bold text-gray-900">Raadhyam Admin</span>
-              </div>
-              
-              <div className="px-4 mt-4">
-                <button
-                  onClick={handleGoHome}
-                  className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-                >
-                  <Home size={18} className="mr-3" />
-                  Back to Home
-                </button>
-              </div>
 
-              <nav className="mt-2 px-2 space-y-1">
-                {navigation.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setActiveTab(item.id);
-                      setSidebarOpen(false);
-                    }}
-                    className={`${
-                      activeTab === item.id
-                        ? 'bg-blue-50 text-blue-600 border-blue-600'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-transparent'
-                    } group flex items-center px-2 py-2 text-base font-medium rounded-lg border-l-4 w-full text-left transition-colors`}
-                  >
-                    <item.icon
-                      className={`${
-                        activeTab === item.id ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-500'
-                      } mr-4 flex-shrink-0 h-6 w-6`}
-                    />
-                    {item.name}
-                  </button>
-                ))}
-              </nav>
-            </div>
-            
-            <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
-              <div className="flex items-center w-full justify-between">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <User className="h-10 w-10 rounded-full bg-gray-300 p-2" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-base font-medium text-gray-700">Admin User</p>
-                    <p className="text-sm font-medium text-gray-500">admin@raadhyam.com</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={handleLogout}
-                  className="text-gray-400 hover:text-gray-500 ml-2"
-                >
-                  <LogOut size={18} />
-                </button>
-              </div>
-            </div>
+            <SidebarContent mobile />
           </div>
         </div>
       )}
 
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
-        <div className="flex-1 flex flex-col min-h-0 border-r border-gray-200 bg-white">
-          <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
-            <div className="flex items-center flex-shrink-0 px-4 mb-6">
-              <BookOpen className="h-8 w-8 text-blue-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">Raadhyam Admin</span>
-            </div>
-
-            <div className="px-4 mb-4">
-              <button
-                onClick={handleGoHome}
-                className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                <Home size={18} className="mr-3" />
-                Back to Home
-              </button>
-            </div>
-
-            <nav className="mt-2 flex-1 px-2 bg-white space-y-1">
-              {navigation.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`${
-                    activeTab === item.id
-                      ? 'bg-blue-50 text-blue-600 border-blue-600'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-transparent'
-                  } group flex items-center px-2 py-2 text-sm font-medium rounded-lg border-l-4 w-full text-left transition-colors`}
-                >
-                  <item.icon
-                    className={`${
-                      activeTab === item.id ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-500'
-                    } mr-3 flex-shrink-0 h-6 w-6`}
-                  />
-                  {item.name}
-                </button>
-              ))}
-            </nav>
-          </div>
-          <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
-            <div className="flex items-center w-full">
-              <div className="flex-shrink-0">
-                <User className="h-9 w-9 rounded-full bg-gray-300 p-2" />
-              </div>
-              <div className="ml-3 flex-1">
-                <p className="text-sm font-medium text-gray-700">Admin User</p>
-                <p className="text-xs font-medium text-gray-500">admin@raadhyam.com</p>
-              </div>
-              <button 
-                onClick={handleLogout}
-                className="ml-2 text-gray-400 hover:text-gray-500 transition-colors"
-              >
-                <LogOut size={18} />
-              </button>
-            </div>
-          </div>
+      <div className="fixed inset-y-0 left-0 hidden w-72 md:flex md:flex-col">
+        <div className="m-3 flex h-[calc(100vh-1.5rem)] flex-col rounded-3xl border border-white/10 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-2xl shadow-slate-900/25">
+          <SidebarContent />
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="md:pl-64 flex flex-col flex-1">
-        <div className="sticky top-0 z-10 md:hidden pl-1 pt-1 sm:pl-3 sm:pt-3 bg-gray-50">
+      <div className="flex flex-1 flex-col md:pl-72">
+        <div className="sticky top-0 z-30 border-b border-amber-200/60 bg-white/75 px-2 py-2 backdrop-blur md:hidden">
           <button
-            className="-ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 transition hover:bg-amber-50 hover:text-slate-900"
             onClick={() => setSidebarOpen(true)}
           >
             <Menu className="h-6 w-6" />
@@ -185,8 +157,8 @@ const DashboardLayout = ({ children, activeTab, setActiveTab }) => {
         </div>
         
         <main className="flex-1">
-          <div className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+          <div className="py-6 md:py-8">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
               {children}
             </div>
           </div>

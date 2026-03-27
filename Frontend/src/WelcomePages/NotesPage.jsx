@@ -113,13 +113,13 @@ const MusicNotesPage = () => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      guitar: 'bg-red-500',
-      piano: 'bg-blue-500',
-      violin: 'bg-purple-500',
-      drums: 'bg-orange-500',
-      vocal: 'bg-pink-500',
-      bass: 'bg-green-500',
-      ukulele: 'bg-yellow-500'
+      guitar: 'bg-amber-600',
+      piano: 'bg-slate-700',
+      violin: 'bg-amber-700',
+      drums: 'bg-slate-800',
+      vocal: 'bg-amber-500',
+      bass: 'bg-slate-600',
+      ukulele: 'bg-amber-800'
     };
     return colors[category] || 'bg-gray-500';
   };
@@ -231,10 +231,10 @@ const MusicNotesPage = () => {
     return (
       <>
         <NavBarPage />
-        <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center pt-20">
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center pt-20">
           <div className="text-center">
-            <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600 font-medium">Loading music notes...</p>
+            <div className="w-16 h-16 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-slate-600 font-medium">Loading music notes...</p>
           </div>
         </div>
         <FooterPage />
@@ -246,14 +246,14 @@ const MusicNotesPage = () => {
     return (
       <>
         <NavBarPage />
-        <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center pt-20">
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center pt-20">
           <div className="text-center max-w-md mx-4">
-            <div className="text-red-600 text-6xl mb-4">🎵</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Oops!</h2>
-            <p className="text-gray-600 mb-6">{error}</p>
+            <div className="text-amber-600 text-6xl mb-4">🎵</div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Oops!</h2>
+            <p className="text-slate-600 mb-6">{error}</p>
             <button
               onClick={fetchMusicNotes}
-              className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition duration-300 font-medium"
+              className="bg-amber-600 text-slate-900 px-6 py-3 rounded-lg hover:bg-amber-500 transition duration-300 font-semibold"
             >
               Try Again
             </button>
@@ -268,42 +268,40 @@ const MusicNotesPage = () => {
     <>
       <NavBarPage />
 
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 pt-20">
-        {/* Header */}
-        <div className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between py-6">
-              <div className="flex items-center mb-4 lg:mb-0">
-                <div className="w-12 h-12 bg-gradient-to-r from-red-600 to-orange-600 rounded-xl flex items-center justify-center mr-4">
-                  <Music className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Music Notes</h1>
-                  <p className="text-gray-600">Discover and learn from our music collection</p>
-                </div>
-              </div>
+      <div className="min-h-screen bg-slate-50 pt-20">
+        <section className="relative overflow-hidden border-b border-amber-600/20 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_20%,rgba(217,119,6,0.22),transparent_30%),radial-gradient(circle_at_80%_18%,rgba(245,158,11,0.12),transparent_25%)]" />
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8 sm:pt-12 sm:pb-10">
+            <div className="text-center mb-8">
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-amber-600/30 bg-amber-600/10 text-amber-300 text-sm font-medium mb-5">
+                <Music className="w-4 h-4" /> Music Learning Library
+              </span>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-100 mb-3">Music Notes</h1>
+              <p className="text-slate-300/90 text-base sm:text-lg max-w-2xl mx-auto">
+                Discover and learn from our structured notes, tabs, and practical techniques.
+              </p>
+            </div>
 
-              <div className="flex flex-col sm:flex-row gap-4">
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <div className="mx-auto max-w-3xl rounded-2xl border border-amber-600/25 bg-slate-900/55 backdrop-blur p-4 sm:p-5">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                   <input
                     type="text"
                     placeholder="Search notes..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 w-full sm:w-64"
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-amber-600/30 bg-slate-950/50 text-slate-100 placeholder:text-slate-400 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none"
                   />
                 </div>
 
-                {/* Category Filter */}
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white"
+                  className="px-4 py-3 rounded-xl border border-amber-600/30 bg-slate-950/50 text-slate-100 focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 outline-none"
                 >
                   {categories.map(category => (
-                    <option key={category} value={category}>
+                    <option key={category} value={category} className="bg-slate-900 text-slate-100">
                       {category === 'all' ? 'All Categories' : category.charAt(0).toUpperCase() + category.slice(1)}
                     </option>
                   ))}
@@ -311,16 +309,16 @@ const MusicNotesPage = () => {
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Notes Grid */}
           {filteredNotes.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
+            <div className="text-center py-16 bg-white rounded-2xl shadow-sm border border-slate-200">
               <div className="text-6xl mb-4">🎵</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">No notes found</h3>
-              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">No notes found</h3>
+              <p className="text-slate-600 mb-6 max-w-md mx-auto">
                 {searchTerm || selectedCategory !== 'all'
                   ? 'Try adjusting your search criteria'
                   : 'No music notes available yet. Check back soon!'}
@@ -331,7 +329,7 @@ const MusicNotesPage = () => {
                     setSearchTerm('');
                     setSelectedCategory('all');
                   }}
-                  className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition duration-300 font-medium"
+                  className="bg-amber-600 text-slate-900 px-6 py-3 rounded-lg hover:bg-amber-500 transition duration-300 font-semibold"
                 >
                   Clear Filters
                 </button>
@@ -343,10 +341,10 @@ const MusicNotesPage = () => {
                 <div
                   key={note._id}
                   onClick={() => openNoteModal(note)}
-                  className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group border border-gray-100 overflow-hidden"
+                  className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group border border-slate-200 overflow-hidden hover:-translate-y-1"
                 >
                   {/* Thumbnail */}
-                  <div className="h-48 bg-gradient-to-br from-red-500 to-orange-500 relative overflow-hidden">
+                  <div className="h-48 bg-gradient-to-br from-slate-900 to-slate-700 relative overflow-hidden">
                     {note.thumbnail ? (
                       <img
                         src={note.thumbnail}
@@ -369,15 +367,15 @@ const MusicNotesPage = () => {
 
                   {/* Content */}
                   <div className="p-6">
-                    <h3 className="font-bold text-gray-900 text-lg mb-2 line-clamp-2 group-hover:text-red-600 transition-colors">
+                    <h3 className="font-bold text-slate-900 text-lg mb-2 line-clamp-2 group-hover:text-amber-700 transition-colors">
                       {note.title}
                     </h3>
 
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                    <p className="text-slate-600 text-sm mb-4 line-clamp-2">
                       {note.explanation || 'No description available'}
                     </p>
 
-                    <div className="flex items-center justify-between text-sm text-gray-500">
+                    <div className="flex items-center justify-between text-sm text-slate-500">
                       <div className="flex items-center">
                         <BookOpen className="w-4 h-4 mr-1" />
                         <span>{note.sections?.length || 0} sections</span>
@@ -397,14 +395,14 @@ const MusicNotesPage = () => {
 
       {/* Full Screen Modal */}
       {showModal && selectedNote && (
-        <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-50 z-50 overflow-y-auto">
           {/* Modal Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 z-10">
+          <div className="sticky top-0 bg-white/95 backdrop-blur border-b border-slate-200 z-10">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between py-4">
                 <button
                   onClick={closeNoteModal}
-                  className="flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm sm:text-base"
+                  className="flex items-center text-slate-600 hover:text-slate-900 transition-colors text-sm sm:text-base"
                 >
                   <X className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
                   <span className="hidden sm:inline">Back to Library</span>
@@ -414,7 +412,7 @@ const MusicNotesPage = () => {
                 <div className="flex items-center space-x-2 sm:space-x-4">
                   <button
                     onClick={() => shareNote(selectedNote)}
-                    className="flex items-center text-gray-600 hover:text-red-600 transition-colors text-sm sm:text-base"
+                    className="flex items-center text-slate-600 hover:text-amber-700 transition-colors text-sm sm:text-base"
                   >
                     <Share2 className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
                     <span className="hidden sm:inline">Share</span>
@@ -440,13 +438,13 @@ const MusicNotesPage = () => {
                   <span className={`inline-block ${getCategoryColor(selectedNote.category)} text-white px-3 py-1 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium capitalize mb-2`}>
                     {selectedNote.category}
                   </span>
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-3">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-2 sm:mb-3">
                     {selectedNote.title}
                   </h1>
                 </div>
               </div>
               {selectedNote.explanation && (
-                <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-2">
+                <p className="text-base sm:text-lg lg:text-xl text-slate-600 max-w-3xl mx-auto px-2">
                   {selectedNote.explanation}
                 </p>
               )}

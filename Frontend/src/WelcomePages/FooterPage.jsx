@@ -32,7 +32,7 @@ const FooterPage = () => {
 
         /* nav links */
         .ft-link {
-          color: #94a3b8;
+          color: #64748b;
           text-decoration: none;
           font-size: .9rem;
           font-weight: 500;
@@ -48,30 +48,30 @@ const FooterPage = () => {
           position:absolute;
           bottom:0; left:0;
           width:0; height:2px;
-          background:linear-gradient(90deg,#dc2626,#ef4444);
+          background:linear-gradient(90deg,#2563eb,#f59e0b,#ec4899);
           border-radius:2px;
           transition:width .3s ease;
         }
-        .ft-link:hover { color:#dc2626; transform:translateX(4px); }
+        .ft-link:hover { color:#2563eb; transform:translateX(4px); }
         .ft-link:hover::after { width:100%; }
 
         /* social buttons */
         .ft-social {
           width:42px; height:42px;
           border-radius:10px;
-          background:rgba(220,38,38,.1);
-          border:1px solid rgba(220,38,38,.2);
+          background:rgba(37,99,235,.1);
+          border:1px solid rgba(37,99,235,.22);
           display:flex; align-items:center; justify-content:center;
-          color:#dc2626;
+          color:#2563eb;
           text-decoration:none;
           transition:all .3s cubic-bezier(.4,0,.2,1);
         }
         .ft-social:hover {
-          background:linear-gradient(135deg,#dc2626,#991b1b);
-          color:#fff;
+          background:linear-gradient(135deg,#2563eb,#f59e0b,#ec4899);
+          color:#ffffff;
           border-color:transparent;
           transform:translateY(-4px);
-          box-shadow:0 8px 24px rgba(220,38,38,.35);
+          box-shadow:0 10px 24px rgba(37,99,235,.24);
         }
 
         /* column heading */
@@ -91,7 +91,7 @@ const FooterPage = () => {
           content:'';
           display:inline-block;
           width:18px; height:3px;
-          background:linear-gradient(90deg,#dc2626,#ef4444);
+          background:linear-gradient(90deg,#2563eb,#f59e0b,#ec4899);
           border-radius:2px;
           flex-shrink:0;
         }
@@ -109,7 +109,7 @@ const FooterPage = () => {
         .ft-contact-icon {
           width:32px; height:32px;
           border-radius:8px;
-          background:rgba(220,38,38,.08);
+          background:rgba(245,158,11,.14);
           display:flex; align-items:center; justify-content:center;
           font-size:.9rem;
           flex-shrink:0;
@@ -123,7 +123,7 @@ const FooterPage = () => {
           font-size:.8rem;
           transition:color .2s;
         }
-        .ft-bot-link:hover { color:#dc2626; }
+        .ft-bot-link:hover { color:#2563eb; }
 
         @media(max-width:768px){
           .ft-grid { grid-template-columns:1fr 1fr !important; }
@@ -138,10 +138,10 @@ const FooterPage = () => {
       <footer className="ft-root">
 
         {/* ── Top accent bar ── */}
-        <div style={{ height:4, background:'linear-gradient(90deg,#dc2626,#ef4444,#991b1b)' }} />
+        <div style={{ height:4, background:'linear-gradient(90deg,#2563eb,#f59e0b,#ec4899)' }} />
 
         {/* ── Main body ── */}
-        <div style={{ background:'linear-gradient(135deg,#FFF8EE 0%,#FEF3C7 30%,#FFFBF5 100%)', padding:'4rem 1.5rem 3rem' }}>
+        <div style={{ background:'linear-gradient(140deg,#f4f8ff 0%,#fff7e6 52%,#fff2fa 100%)', padding:'4rem 1.5rem 3rem', borderTop:'1px solid rgba(37,99,235,.18)' }}>
           <div style={{ maxWidth:1280, margin:'0 auto' }}>
             <div className="ft-grid" style={{ display:'grid', gridTemplateColumns:'2fr 1fr 1fr 1.4fr', gap:'3rem' }}>
 
@@ -221,14 +221,14 @@ const FooterPage = () => {
         </div>
 
         {/* ── Bottom bar ── */}
-        <div style={{ background:'#1e293b', padding:'1.25rem 1.5rem' }}>
+        <div style={{ background:'#334155', padding:'1.25rem 1.5rem', borderTop:'1px solid rgba(236,72,153,.2)' }}>
           <div style={{ maxWidth:1280, margin:'0 auto' }}>
             <div className="ft-bot-row" style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:'1rem' }}>
-              <p style={{ color:'#64748b', fontSize:'.8rem', margin:0 }}>
-                © {year} <span style={{ color:'#94a3b8', fontWeight:600 }}>Raadhyam Musical Classes</span>. All rights reserved.
+              <p style={{ color:'#94a3b8', fontSize:'.8rem', margin:0 }}>
+                © {year} <span style={{ color:'#e2e8f0', fontWeight:600 }}>Raadhyam Musical Classes</span>. All rights reserved.
               </p>
-              <p style={{ color:'#64748b', fontSize:'.8rem', margin:0, display:'flex', alignItems:'center', gap:'.35rem' }}>
-                Made with <span style={{ color:'#dc2626', fontSize:'1rem' }}>♥</span> for Music Lovers
+              <p style={{ color:'#94a3b8', fontSize:'.8rem', margin:0, display:'flex', alignItems:'center', gap:'.35rem' }}>
+                Made with <span style={{ color:'#ec4899', fontSize:'1rem' }}>♥</span> for Music Lovers
               </p>
             </div>
           </div>
