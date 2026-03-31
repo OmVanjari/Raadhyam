@@ -52,7 +52,7 @@ const ArtistsPage = () => {
         ]} />
 
       {/* View toggle */}
-      <div style={{ display:'flex', gap:6, marginBottom:'1rem' }}>
+      <div style={{ display:'flex', gap:6, marginBottom:'1rem', flexWrap:'wrap' }} className="view-toggle">
         {['Table','Grid'].map((v,i) => (
           <button key={v} onClick={()=>setView(v.toLowerCase())}
             style={{ padding:'6px 14px', borderRadius:8, border:`1.5px solid ${view===v.toLowerCase()?Y:BORDER}`, background:view===v.toLowerCase()?Y:'#fff', color:view===v.toLowerCase()?'#fff':MUTED, fontSize:'0.82rem', fontWeight:600, cursor:'pointer', fontFamily:SANS }}>{v}</button>
@@ -80,14 +80,14 @@ const ArtistsPage = () => {
                 onBlur={e=>{e.target.style.borderColor=BORDER;e.target.style.background='#F9FAFB';}} />
             </div>
           </Card>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:'1rem' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:'1rem' }} className="artist-grid">
             {Array.from({length:6}).map((_,i) => (
               <Card key={i} style={{ textAlign:'center', padding:'1.5rem 1rem' }}>
                 <Avatar name="A" size={56} style={{ margin:'0 auto 0.75rem' }} />
                 <div style={{ width:'70%', height:13, background:'#F3F4F6', borderRadius:4, margin:'0 auto 6px' }} />
                 <div style={{ width:'50%', height:11, background:'#F3F4F6', borderRadius:4, margin:'0 auto 10px' }} />
                 <Badge status={i%4===3?'Inactive':'Active'} />
-                <div style={{ display:'flex', justifyContent:'center', gap:4, marginTop:10 }}>
+                <div style={{ display:'flex', justifyContent:'center', gap:4, marginTop:10, flexWrap:'wrap' }}>
                   <RowActions active={i%4!==3} onEdit={()=>setModal('edit')} />
                 </div>
               </Card>
@@ -95,6 +95,11 @@ const ArtistsPage = () => {
           </div>
         </div>
       )}
+      <style>{`
+        .artist-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:1rem; }
+        @media(max-width:640px) { .artist-grid { grid-template-columns:repeat(2,1fr); gap:0.75rem; } }
+        @media(max-width:480px) { .artist-grid { grid-template-columns:1fr; } }
+      `}</style>
     </div>
   );
 };

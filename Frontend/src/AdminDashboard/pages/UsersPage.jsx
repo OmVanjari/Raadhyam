@@ -62,9 +62,9 @@ const UsersPage = () => {
           sortOptions={['Name A–Z','Name Z–A','Newest','Oldest','Most Streams']}
         />
         {/* Plan filter tabs */}
-        <div style={{ display:'flex', gap:6, padding:'0.75rem 1.25rem', borderBottom:`1px solid ${BORDER}` }}>
+        <div className="filter-tabs" style={{ display:'flex', gap:6, padding:'0.75rem 1.25rem', borderBottom:`1px solid ${BORDER}`, flexWrap:'wrap' }}>
           {['All Plans','Free','Monthly Premium','Annual Premium'].map((f,i) => (
-            <button key={f} style={{ padding:'5px 12px', borderRadius:8, border:`1.5px solid ${i===0?Y:BORDER}`, background:i===0?Y:'#fff', color:i===0?'#fff':MUTED, fontSize:'0.78rem', fontWeight:600, cursor:'pointer', fontFamily:SANS }}>{f}</button>
+            <button key={f} style={{ padding:'5px 12px', borderRadius:8, border:`1.5px solid ${i===0?Y:BORDER}`, background:i===0?Y:'#fff', color:i===0?'#fff':MUTED, fontSize:'0.78rem', fontWeight:600, cursor:'pointer', fontFamily:SANS, whiteSpace:'nowrap' }}>{f}</button>
           ))}
         </div>
         <Table headers={HEADERS} rows={rows} checkable />

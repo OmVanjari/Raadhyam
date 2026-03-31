@@ -19,11 +19,11 @@ export const Card = ({ children, style, noPad }) => (
 export const PageHeader = ({ title, subtitle, actions }) => (
   <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
     flexWrap:'wrap', gap:10, marginBottom:'1.25rem' }}>
-    <div>
+    <div style={{ flex: '1 1 auto', minWidth: 0 }}>
       <h1 style={{ fontSize:'1.2rem', fontWeight:700, color:TEXT, margin:0, fontFamily:SANS }}>{title}</h1>
       {subtitle && <p style={{ fontSize:'0.82rem', color:MUTED, margin:'2px 0 0', fontFamily:SANS }}>{subtitle}</p>}
     </div>
-    {actions && <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>{actions}</div>}
+    {actions && <div className="ph-actions" style={{ display:'flex', gap:8, flexWrap:'wrap' }}>{actions}</div>}
   </div>
 );
 
@@ -35,8 +35,8 @@ export const SectionTitle = ({ children, action }) => (
 );
 
 /* ── Buttons ───────────────────────────────────────────────────────────── */
-export const PrimaryBtn = ({ children, icon:Icon, small, style }) => (
-  <button style={{ display:'inline-flex', alignItems:'center', gap:6,
+export const PrimaryBtn = ({ children, icon:Icon, small, style, onClick }) => (
+  <button onClick={onClick} style={{ display:'inline-flex', alignItems:'center', gap:6,
     padding:small?'6px 12px':'8px 16px', background:Y, border:'none', borderRadius:8,
     fontSize:small?'0.78rem':'0.85rem', fontWeight:600, color:'#fff', cursor:'pointer',
     fontFamily:SANS, whiteSpace:'nowrap', ...style }}>
@@ -44,8 +44,8 @@ export const PrimaryBtn = ({ children, icon:Icon, small, style }) => (
   </button>
 );
 
-export const OutlineBtn = ({ children, icon:Icon, danger, small }) => (
-  <button style={{ display:'inline-flex', alignItems:'center', gap:6,
+export const OutlineBtn = ({ children, icon:Icon, danger, small, onClick }) => (
+  <button onClick={onClick} style={{ display:'inline-flex', alignItems:'center', gap:6,
     padding:small?'5px 10px':'7px 14px', background:'#fff',
     border:`1.5px solid ${danger?'#FCA5A5':BORDER}`, borderRadius:8,
     fontSize:small?'0.78rem':'0.85rem', fontWeight:500,
@@ -153,11 +153,9 @@ export const UploadBox = ({ label, accept, required }) => (
 );
 
 /* ── Search + filter toolbar ───────────────────────────────────────────── */
-export const Toolbar = ({ searchPlaceholder, filters, activeFilter, sortOptions, bulkCount }) => (
-  <div style={{ display:'flex', flexWrap:'wrap', gap:8, padding:'1rem 1.25rem',
-    borderBottom:`1px solid ${BORDER}`, alignItems:'center' }}>
-    {/* Search */}
-    <div style={{ position:'relative', flex:'1 1 180px', minWidth:160 }}>
+export const Toolbar = ({ searchPlaceholder, filters, sortOptions }) => (
+  <div className="toolbar-row">
+    <div style={{ position:'relative', flex:'1 1 160px', minWidth:140, maxWidth: '100%' }}>
       <span style={{ position:'absolute', left:10, top:'50%', transform:'translateY(-50%)',
         color:MUTED, fontSize:14, pointerEvents:'none' }}>🔍</span>
       <input placeholder={searchPlaceholder||'Search...'} style={{ width:'100%',
@@ -167,33 +165,21 @@ export const Toolbar = ({ searchPlaceholder, filters, activeFilter, sortOptions,
         onFocus={e=>{e.target.style.borderColor=Y;e.target.style.background='#fff';}}
         onBlur={e=>{e.target.style.borderColor=BORDER;e.target.style.background='#F9FAFB';}} />
     </div>
-    {/* Status filter */}
     {filters && (
       <select style={{ padding:'7px 10px', border:`1.5px solid ${BORDER}`, borderRadius:8,
         fontSize:'0.82rem', color:TEXT, background:'#fff', outline:'none',
-        fontFamily:SANS, cursor:'pointer' }}>
+        fontFamily:SANS, cursor:'pointer', minWidth:120, boxSizing:'border-box' }}>
         <option>All Status</option>
         {filters.map(f=><option key={f}>{f}</option>)}
       </select>
     )}
-    {/* Sort */}
     {sortOptions && (
       <select style={{ padding:'7px 10px', border:`1.5px solid ${BORDER}`, borderRadius:8,
         fontSize:'0.82rem', color:TEXT, background:'#fff', outline:'none',
-        fontFamily:SANS, cursor:'pointer' }}>
+        fontFamily:SANS, cursor:'pointer', minWidth:120, boxSizing:'border-box' }}>
         <option>Sort by</option>
         {sortOptions.map(s=><option key={s}>{s}</option>)}
       </select>
-    )}
-    {/* Bulk actions */}
-    {bulkCount > 0 && (
-      <div style={{ display:'flex', alignItems:'center', gap:6, marginLeft:'auto',
-        padding:'5px 12px', background:'#FEF3C7', borderRadius:8, border:`1px solid #FDE68A` }}>
-        <span style={{ fontSize:'0.8rem', fontWeight:600, color:'#92400E', fontFamily:SANS }}>
-          {bulkCount} selected
-        </span>
-        <OutlineBtn danger small icon={TrashIcon}>Delete</OutlineBtn>
-      </div>
     )}
   </div>
 );
@@ -207,9 +193,8 @@ const TrashIcon = ({size=13}) => (
 
 /* ── Table ─────────────────────────────────────────────────────────────── */
 export const Table = ({ headers, rows, checkable }) => (
-  <div style={{ overflowX:'auto' }}>
-    <table style={{ width:'100%', borderCollapse:'collapse', fontFamily:SANS,
-      fontSize:'0.85rem', minWidth:500 }}>
+  <div className="tbl-wrap">
+    <table style={{ borderCollapse:'collapse', fontFamily:SANS, fontSize:'0.85rem' }}>
       <thead>
         <tr style={{ background:'#F9FAFB' }}>
           {checkable && (
@@ -250,11 +235,9 @@ export const Table = ({ headers, rows, checkable }) => (
 
 /* ── Pagination ────────────────────────────────────────────────────────── */
 export const Pagination = ({ label='Showing 1–10 of 0' }) => (
-  <div style={{ padding:'10px 14px', borderTop:`1px solid ${BORDER}`,
-    display:'flex', alignItems:'center', justifyContent:'space-between',
-    flexWrap:'wrap', gap:8 }}>
+  <div className="pg-row">
     <span style={{ fontSize:'0.78rem', color:MUTED, fontFamily:SANS }}>{label}</span>
-    <div style={{ display:'flex', gap:4 }}>
+    <div className="pg-btns">
       {['«','‹','1','2','3','›','»'].map(p => (
         <button key={p} style={{ padding:'4px 9px', borderRadius:6,
           border:`1px solid ${p==='1'?Y:BORDER}`, background:p==='1'?Y:'#fff',
@@ -267,9 +250,9 @@ export const Pagination = ({ label='Showing 1–10 of 0' }) => (
 
 /* ── Modal shell ───────────────────────────────────────────────────────── */
 export const Modal = ({ title, children, onClose, wide }) => (
-  <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.45)',
+  <div className="adm-modal-wrap" style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.45)',
     zIndex:200, display:'flex', alignItems:'center', justifyContent:'center', padding:'1rem' }}>
-    <div style={{ background:'#fff', borderRadius:14, width:'100%',
+    <div className="adm-modal-inner" style={{ background:'#fff', borderRadius:14, width:'100%',
       maxWidth:wide?680:480, maxHeight:'92vh', overflowY:'auto', fontFamily:SANS }}>
       <div style={{ padding:'1rem 1.25rem', borderBottom:`1px solid ${BORDER}`,
         display:'flex', alignItems:'center', justifyContent:'space-between',
@@ -298,7 +281,7 @@ export const FormActions = ({ submitLabel='Save', onCancel }) => (
 
 /* ── Row action group ──────────────────────────────────────────────────── */
 export const RowActions = ({ onView, onEdit, onDelete, active }) => (
-  <div style={{ display:'flex', gap:2, alignItems:'center' }}>
+  <div style={{ display:'flex', gap:2, alignItems:'center', flexWrap:'nowrap' }}>
     <IconBtn icon={EyeIcon}   color="#3B82F6" title="View"   />
     <IconBtn icon={EditIcon}  color="#10B981" title="Edit"   />
     <IconBtn icon={TrashIcon} color="#EF4444" title="Delete" />

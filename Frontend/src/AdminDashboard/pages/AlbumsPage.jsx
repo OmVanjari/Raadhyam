@@ -50,7 +50,7 @@ const AlbumsPage = () => {
         ]} />
 
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'1rem', flexWrap:'wrap', gap:8 }}>
-        <div style={{ display:'flex', gap:6 }}>
+        <div className="view-toggle" style={{ display:'flex', gap:6 }}>
           {['Grid','Table'].map((v,i) => (
             <button key={v} onClick={()=>setView(v.toLowerCase())}
               style={{ padding:'6px 14px', borderRadius:8, border:`1.5px solid ${view===v.toLowerCase()?Y:BORDER}`, background:view===v.toLowerCase()?Y:'#fff', color:view===v.toLowerCase()?'#fff':MUTED, fontSize:'0.82rem', fontWeight:600, cursor:'pointer', fontFamily:SANS }}>{v}</button>
@@ -58,7 +58,7 @@ const AlbumsPage = () => {
         </div>
         {/* Inline search for grid */}
         {view==='grid' && (
-          <div style={{ position:'relative', flex:'0 1 240px' }}>
+          <div style={{ position:'relative', flex:'1 1 240px', minWidth: 200, maxWidth: '100%' }}>
             <span style={{ position:'absolute', left:10, top:'50%', transform:'translateY(-50%)', color:MUTED }}>🔍</span>
             <input placeholder="Search albums..." style={{ width:'100%', padding:'7px 10px 7px 30px', border:`1.5px solid ${BORDER}`, borderRadius:8, fontSize:'0.85rem', color:TEXT, background:'#F9FAFB', outline:'none', fontFamily:SANS, boxSizing:'border-box' }}
               onFocus={e=>{e.target.style.borderColor=Y;e.target.style.background='#fff';}}
@@ -68,7 +68,7 @@ const AlbumsPage = () => {
       </div>
 
       {view === 'grid' ? (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))', gap:'1rem' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))', gap:'1rem' }} className="album-grid">
           {Array.from({length:8}).map((_,i) => (
             <Card key={i} style={{ padding:0, overflow:'hidden' }}>
               <div style={{ height:140, background:YL, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'2.5rem' }}>💿</div>
@@ -76,7 +76,7 @@ const AlbumsPage = () => {
                 <div style={{ width:'80%', height:12, background:'#F3F4F6', borderRadius:4, marginBottom:6 }} />
                 <div style={{ width:'60%', height:10, background:'#F3F4F6', borderRadius:4, marginBottom:6 }} />
                 <div style={{ width:'40%', height:10, background:'#F3F4F6', borderRadius:4, marginBottom:10 }} />
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:6 }}>
                   <Badge status={i%4===3?'Inactive':i%4===2?'Draft':'Active'} />
                   <RowActions active={i%4!==3} onEdit={()=>setModal('edit')} />
                 </div>
@@ -95,6 +95,11 @@ const AlbumsPage = () => {
           <Pagination label="Showing 1–10 of 0 albums" />
         </Card>
       )}
+      <style>{`
+        .album-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1rem; }
+        @media(max-width:640px) { .album-grid { grid-template-columns:repeat(2,1fr); gap:0.75rem; } }
+        @media(max-width:400px) { .album-grid { grid-template-columns:1fr; } }
+      `}</style>
     </div>
   );
 };

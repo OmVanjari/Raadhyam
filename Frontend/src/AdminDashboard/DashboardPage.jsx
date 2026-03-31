@@ -4,18 +4,18 @@ const DashboardPage = () => (
   <div style={{ display:'flex', flexDirection:'column', gap:'1.25rem', fontFamily:SANS }}>
 
     {/* Header */}
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
-      <div>
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8, marginBottom:'1rem' }}>
+      <div style={{ flex: '1 1 auto', minWidth: 0 }}>
         <h1 style={{ fontSize:'1.2rem', fontWeight:700, color:TEXT, margin:0 }}>Dashboard</h1>
         <p style={{ fontSize:'0.82rem', color:MUTED, margin:'2px 0 0' }}>Welcome back, Admin</p>
       </div>
-      <div style={{ fontSize:'0.82rem', color:MUTED, background:'#fff', border:`1px solid ${BORDER}`, borderRadius:8, padding:'6px 12px' }}>
+      <div style={{ fontSize:'0.82rem', color:MUTED, background:'#fff', border:`1px solid ${BORDER}`, borderRadius:8, padding:'6px 12px', whiteSpace:'nowrap' }}>
         📅 Today's Date
       </div>
     </div>
 
     {/* Stat cards */}
-    <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'1rem' }} className="dash-stats">
+    <div className="stat-row">
       <StatCard label="Total Users"   icon="👥" color="#3B82F6" bg="#EFF6FF" />
       <StatCard label="Total Songs"   icon="🎵" color="#8B5CF6" bg="#F5F3FF" />
       <StatCard label="Total Artists" icon="🎤" color="#10B981" bg="#ECFDF5" />
@@ -23,23 +23,23 @@ const DashboardPage = () => (
     </div>
 
     {/* Charts */}
-    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'1rem' }} className="dash-charts">
+    <div className="rg-3">
       <Card><SectionTitle>User Growth</SectionTitle><ChartBox label="Line chart — user growth" /></Card>
       <Card><SectionTitle>Streams / Plays</SectionTitle><ChartBox label="Bar chart — streams" /></Card>
       <Card><SectionTitle>Revenue</SectionTitle><ChartBox label="Bar chart — revenue" /></Card>
     </div>
 
     {/* Recent Songs + Recent Activity */}
-    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem' }} className="dash-two">
+    <div className="rg-2">
 
       {/* Recent Songs */}
       <Card noPad>
-        <div style={{ padding:'1rem 1.25rem', borderBottom:`1px solid ${BORDER}`, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <div style={{ padding:'1rem 1.25rem', borderBottom:`1px solid ${BORDER}`, display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
           <h3 style={{ fontSize:'0.92rem', fontWeight:700, color:TEXT, margin:0 }}>Recent Songs</h3>
-          <button style={{ fontSize:'0.78rem', color:Y, background:'none', border:'none', cursor:'pointer', fontWeight:600, fontFamily:SANS }}>View all →</button>
+          <button style={{ fontSize:'0.78rem', color:Y, background:'none', border:'none', cursor:'pointer', fontWeight:600, fontFamily:SANS, whiteSpace:'nowrap' }}>View all →</button>
         </div>
         {[1,2,3,4].map(i => (
-          <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 1.25rem', borderBottom:`1px solid ${BORDER}` }}>
+          <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 1.25rem', borderBottom:`1px solid ${BORDER}`, flexWrap:'wrap' }}>
             <Cover size={34} />
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ width:'70%', height:11, background:'#F3F4F6', borderRadius:4, marginBottom:5 }} />
@@ -76,12 +76,12 @@ const DashboardPage = () => (
 
     {/* Top Artists */}
     <Card noPad>
-      <div style={{ padding:'1rem 1.25rem', borderBottom:`1px solid ${BORDER}`, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+      <div style={{ padding:'1rem 1.25rem', borderBottom:`1px solid ${BORDER}`, display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
         <h3 style={{ fontSize:'0.92rem', fontWeight:700, color:TEXT, margin:0 }}>Top Artists</h3>
-        <button style={{ fontSize:'0.78rem', color:Y, background:'none', border:'none', cursor:'pointer', fontWeight:600, fontFamily:SANS }}>View all →</button>
+        <button style={{ fontSize:'0.78rem', color:Y, background:'none', border:'none', cursor:'pointer', fontWeight:600, fontFamily:SANS, whiteSpace:'nowrap' }}>View all →</button>
       </div>
-      <div style={{ overflowX:'auto' }}>
-        <table style={{ width:'100%', borderCollapse:'collapse', fontFamily:SANS, fontSize:'0.85rem', minWidth:500 }}>
+      <div style={{ overflowX:'auto', WebkitOverflowScrolling:'touch' }}>
+        <table style={{ width:'100%', borderCollapse:'collapse', fontFamily:SANS, fontSize:'0.85rem', minWidth:700 }}>
           <thead>
             <tr style={{ background:'#F9FAFB' }}>
               {['#','Artist','Genre','Followers','Songs','Status','Actions'].map(h => (
@@ -113,15 +113,12 @@ const DashboardPage = () => (
       </div>
     </Card>
 
-    <style>{`
-      @media(max-width:1024px){ .dash-charts{ grid-template-columns:1fr 1fr !important; } }
-      @media(max-width:768px){
-        .dash-stats{ grid-template-columns:1fr 1fr !important; }
-        .dash-charts{ grid-template-columns:1fr !important; }
-        .dash-two{ grid-template-columns:1fr !important; }
-      }
-      @media(max-width:480px){ .dash-stats{ grid-template-columns:1fr !important; } }
-    `}</style>
+      <style>{`
+        @media(max-width:640px){
+          .dash-charts{grid-template-columns:1fr !important;}
+          .dash-two{grid-template-columns:1fr !important;}
+        }
+      `}</style>
   </div>
 );
 

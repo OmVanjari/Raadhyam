@@ -14,35 +14,25 @@ const AnalyticsPage = () => (
         <OutlineBtn key="exp">⬇ Export Report</OutlineBtn>,
       ]} />
 
-    {/* KPI row */}
-    <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'1rem', marginBottom:'1.25rem' }} className="kpi-grid">
+    <div className="stat-row">
       <StatCard label="Total Streams"    icon="▶️" color="#3B82F6" bg="#EFF6FF" />
       <StatCard label="Avg. Session"     icon="⏱️" color="#8B5CF6" bg="#F5F3FF" />
       <StatCard label="Monthly Revenue"  icon="💰" color={Y}       bg={YL}      />
       <StatCard label="New Users"        icon="👤" color="#10B981" bg="#ECFDF5" />
     </div>
 
-    {/* Charts row 1 */}
-    <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:'1rem', marginBottom:'1.25rem' }} className="chart-main">
-      <Card>
-        <SectionTitle>User Growth (Monthly)</SectionTitle>
-        <ChartBox height={140} label="Line chart — monthly user growth" />
-      </Card>
-      <Card>
-        <SectionTitle>Plan Distribution</SectionTitle>
-        <ChartBox height={140} label="Pie chart — Free vs Premium" />
-      </Card>
+    <div className="rg-2-1" style={{ marginBottom:'1.25rem' }}>
+      <Card><SectionTitle>User Growth (Monthly)</SectionTitle><ChartBox height={140} label="Line chart — monthly user growth" /></Card>
+      <Card><SectionTitle>Plan Distribution</SectionTitle><ChartBox height={140} label="Pie chart — Free vs Premium" /></Card>
     </div>
 
-    {/* Charts row 2 */}
-    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'1rem', marginBottom:'1.25rem' }} className="chart-3">
+    <div className="rg-3" style={{ marginBottom:'1.25rem' }}>
       <Card><SectionTitle>Total Streams</SectionTitle><ChartBox label="Bar chart — streams" /></Card>
       <Card><SectionTitle>Revenue ($)</SectionTitle><ChartBox label="Bar chart — revenue" /></Card>
       <Card><SectionTitle>New Subscriptions</SectionTitle><ChartBox label="Line chart — new subs" /></Card>
     </div>
 
-    {/* Top content + Geo */}
-    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem', marginBottom:'1.25rem' }} className="chart-2">
+    <div className="rg-2" style={{ marginBottom:'1.25rem' }}>
       {/* Top Songs */}
       <Card>
         <SectionTitle>Top Songs This Month</SectionTitle>
