@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import NavBarpage from '../WelcomePages/NavBarpage';
+import FooterPage from '../WelcomePages/FooterPage';
+import heroBg from '../assets/hero-bg.jpg';
 
 const SERIF = "'Cormorant Garamond',Georgia,serif";
 const SANS  = "'Lato',system-ui,sans-serif";
@@ -107,7 +110,7 @@ const RegisterPage = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#FFF8EE 0%,#FEF3C7 45%,#FFFBF5 100%)', fontFamily: SANS, position: 'relative', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: '#0f172a', fontFamily: SANS, position: 'relative', overflow: 'hidden' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Lato:wght@400;600;700&display=swap');
         @keyframes floatNote { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-16px) rotate(8deg)} }
@@ -115,6 +118,11 @@ const RegisterPage = () => {
         @keyframes spin { to{transform:rotate(360deg)} }
         @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
       `}</style>
+
+      <NavBarpage />
+
+      <img src={heroBg} alt="Raadhyam background" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover' }} />
+      <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom, rgba(2,6,23,0.84), rgba(15,23,42,0.84), rgba(2,6,23,0.9))' }} />
 
       {/* Blobs */}
       <div style={{ position:'absolute', top:'-80px', right:'-80px', width:360, height:360, borderRadius:'50%', background:'radial-gradient(circle,rgba(217,119,6,0.12) 0%,transparent 70%)', pointerEvents:'none' }} />
@@ -124,23 +132,8 @@ const RegisterPage = () => {
         <span key={i} style={{ position:'absolute', fontSize:'1.8rem', color:'#D97706', opacity:0.13, top:x.t, bottom:x.b, left:x.l, right:x.r, animation:`floatNote 7s ease-in-out ${x.d} infinite`, pointerEvents:'none', userSelect:'none' }}>{x.n}</span>
       ))}
 
-      {/* Nav strip */}
-      <div style={{ position:'fixed', top:0, left:0, right:0, zIndex:100, background:'#fff', borderBottom:'2px solid #D97706', boxShadow:'0 2px 12px rgba(217,119,6,0.1)', height:64, display:'flex', alignItems:'center', padding:'0 2rem', justifyContent:'space-between' }}>
-        <Link to="/" style={{ display:'flex', alignItems:'center', gap:10, textDecoration:'none' }}>
-          <img src="/Raadhyam.png" alt="Raadhyam" style={{ height:40 }} onError={e=>e.target.style.display='none'} />
-          <span style={{ fontFamily:SERIF, fontSize:'1.3rem', fontWeight:700, color:'#1E293B' }}>Raadhyam<span style={{color:'#D97706'}}>.</span></span>
-        </Link>
-        <div style={{ display:'flex', alignItems:'center', gap:20 }}>
-          <Link to="/" style={{ fontSize:'0.78rem', fontWeight:700, color:'#64748B', textDecoration:'none', letterSpacing:'0.06em', textTransform:'uppercase', transition:'color 0.2s' }}
-            onMouseEnter={e=>e.currentTarget.style.color='#D97706'}
-            onMouseLeave={e=>e.currentTarget.style.color='#64748B'}
-          >← Home</Link>
-          <Link to="/login" style={{ fontSize:'0.78rem', fontWeight:700, color:'#fff', textDecoration:'none', letterSpacing:'0.06em', textTransform:'uppercase', background:'linear-gradient(135deg,#D97706,#B45309)', padding:'7px 18px', borderRadius:8, boxShadow:'0 3px 10px rgba(217,119,6,0.3)' }}>Sign In</Link>
-        </div>
-      </div>
-
       {/* Card */}
-      <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'90px 1rem 2rem' }}>
+      <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', padding:'120px 1rem 3rem', position:'relative', zIndex:2 }}>
         <div style={{ background:'#fff', borderRadius:24, boxShadow:'0 24px 80px rgba(217,119,6,0.14), 0 4px 24px rgba(30,41,59,0.08)', padding:'2.5rem', width:'100%', maxWidth:500, animation:'fadeUp 0.5s ease both', border:'1px solid rgba(217,119,6,0.15)' }}>
 
           {/* Header */}
@@ -274,6 +267,8 @@ const RegisterPage = () => {
           </p>
         </div>
       </div>
+
+      <FooterPage />
     </div>
   );
 };
