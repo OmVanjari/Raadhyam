@@ -44,6 +44,7 @@ desktop.ini
 # ── Uploads / media (local only) ──────────────────────────────────────────────
 Backend/uploads/
 *.mp4
+!Frontend/public/K_Musical_Instrument_Showcase_Video.mp4
 *.mp3
 *.wav
 

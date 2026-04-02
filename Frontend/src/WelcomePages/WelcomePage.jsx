@@ -350,7 +350,7 @@ const RaadhyamWelcomeHome = () => {
               playsInline 
               className="w-full h-full object-cover opacity-60"
             >
-              <source src="/K_Musical_Instrument_Showcase_Video.mp4" type="video/mp4" />
+              <source src={`${import.meta.env.BASE_URL}K_Musical_Instrument_Showcase_Video.mp4`} type="video/mp4" />
             </video>
           </div>
           <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/70 to-transparent pointer-events-none z-10" />
