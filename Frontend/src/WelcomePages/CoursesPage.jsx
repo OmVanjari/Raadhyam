@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Music, CheckCircle, X, Clock, BarChart3 } from 'lucide-react';
+import { Music, CheckCircle, X, Clock, BarChart3, ArrowRight, Sparkles } from 'lucide-react';
 import NavBarpage from './NavBarpage';
 import FooterPage from './FooterPage';
 import heroBg from '../assets/hero-bg.jpg';
@@ -166,56 +166,164 @@ const courses = [
 
 const GlobalStyles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Lato:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Forum&family=Manrope:wght@400;500;600;700;800&display=swap');
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(28px); }
+    @keyframes revealUp {
+      from { opacity: 0; transform: translateY(26px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.95) translateY(20px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
     @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes shimmer {
+      0%, 100% { background-position: 200% center; }
+      50% { background-position: -200% center; }
+    }
+    @keyframes cardPulse {
+      0%, 100% { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04); }
+      50% { box-shadow: 0 12px 48px rgba(239, 126, 26, 0.12); }
+    }
+    @keyframes borderRotate {
+      0% { border-color: rgba(239, 126, 26, 0.18); }
+      50% { border-color: rgba(239, 126, 26, 0.35); }
+      100% { border-color: rgba(239, 126, 26, 0.18); }
+    }
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(2deg) scale(1.05); }
     }
 
-    .co-fade-up { animation: fadeUp .8s ease both; }
-    .co-fade-up-d1 { animation: fadeUp .8s ease .12s both; }
-    .co-fade-up-d2 { animation: fadeUp .8s ease .24s both; }
-    .co-float { animation: float 3s ease-in-out infinite; }
+    .cp-fade-up { animation: revealUp 0.8s ease both; }
+    .cp-fade-up-d1 { animation: revealUp 0.8s ease 0.12s both; }
+    .cp-fade-up-d2 { animation: revealUp 0.8s ease 0.24s both; }
+    .cp-scale-in { animation: scaleIn 0.6s ease both; }
+    .cp-float { animation: float 3.5s ease-in-out infinite; }
+    .cp-pulse { animation: cardPulse 2.5s ease-in-out infinite; }
 
-    .co-card {
-      background: rgba(255,255,255,.86);
-      border: 1px solid rgba(217,119,6,.2);
-      border-radius: 20px;
-      backdrop-filter: blur(10px);
-      transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+    .cp-glass {
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
 
-    .co-card:hover {
-      transform: translateY(-8px);
-      border-color: rgba(217,119,6,.45);
-      box-shadow: 0 24px 56px rgba(30,41,59,.13);
+    .cp-glass-border {
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(239, 126, 26, 0.15);
+      box-shadow: 0 8px 32px rgba(239, 126, 26, 0.08);
+      backdrop-filter: blur(12px);
     }
 
-    .co-gold-gradient {
-      background: linear-gradient(135deg,#D97706 0%, #F59E0B 50%, #D97706 100%);
-      color: #fff;
+    .cp-card {
+      background: rgba(255, 255, 255, 0.65);
+      border: 1px solid rgba(239, 126, 26, 0.18);
+      border-radius: 24px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
     }
 
-    .co-text-gold {
-      background: linear-gradient(90deg,#F59E0B,#D97706,#B45309);
+    .cp-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(239, 126, 26, 0.1) 0%, rgba(244, 161, 79, 0.05) 100%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .cp-card:hover {
+      transform: translateY(-12px);
+      border-color: rgba(239, 126, 26, 0.35);
+      box-shadow: 0 20px 60px rgba(239, 126, 26, 0.15), 0 0 40px rgba(239, 126, 26, 0.08);
+    }
+
+    .cp-card:hover::before {
+      opacity: 1;
+    }
+
+    .cp-btn-primary {
+      background: linear-gradient(130deg, #ef7e1a 0%, #f4a14f 100%);
+      color: #ffffff;
+      font-weight: 700;
+      border-radius: 12px;
+      border: none;
+      box-shadow: 0 12px 28px rgba(239, 126, 26, 0.28);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cp-btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 36px rgba(239, 126, 26, 0.38);
+    }
+
+    .cp-btn-secondary {
+      background: rgba(255, 255, 255, 0.7);
+      border: 1.5px solid rgba(239, 126, 26, 0.25);
+      color: #1f2937;
+      font-weight: 600;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .cp-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: rgba(239, 126, 26, 0.4);
+      box-shadow: 0 12px 28px rgba(239, 126, 26, 0.12);
+    }
+
+    .cp-gradient-text {
+      background: linear-gradient(130deg, #ef7e1a 0%, #f4a14f 60%, #ef7e1a 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
 
+    .cp-accent-border {
+      position: relative;
+      border-top: 2px solid transparent;
+      border-image: linear-gradient(90deg, rgba(239, 126, 26, 0), rgba(239, 126, 26, 0.5), rgba(239, 126, 26, 0)) 1;
+    }
+
     h1, h2, h3, h4, h5, h6 {
-      font-family: 'Playfair Display', Georgia, serif;
+      font-family: 'Forum', Georgia, serif;
+      letter-spacing: 0.02em;
+    }
+
+    body {
+      font-family: 'Manrope', sans-serif;
+      background: #fafaf9;
+    }
+
+    .cp-shell {
+      background: #fdfdfd;
     }
   `}</style>
 );
 
 const CourseCard = ({ course, delay, onOpen }) => {
-  const { ref, inView } = useInView(0.1);
+  const { ref, inView } = useInView(0.12);
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -224,44 +332,88 @@ const CourseCard = ({ course, delay, onOpen }) => {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={() => onOpen(course)}
-      className="co-card overflow-hidden cursor-pointer"
+      className="cp-card overflow-hidden cursor-pointer group"
       style={{
         opacity: inView ? 1 : 0,
-        transform: inView ? (hovered ? 'translateY(-8px)' : 'translateY(0)') : 'translateY(28px)',
-        transition: `opacity .65s ease ${delay}ms, transform .35s ease, box-shadow .35s ease, border-color .35s ease`,
+        transform: inView ? 'translateY(0)' : 'translateY(26px)',
+        transition: `opacity 0.6s ease ${delay}ms, transform 0.6s cubic-bezier(0.4, 0, 0.2, 1) ${delay}ms`,
+        animation: inView ? `cardPulse 2.5s ease-in-out infinite` : 'none',
       }}
     >
-      <div className="relative h-52 overflow-hidden">
+      {/* Image Container */}
+      <div className="relative h-56 overflow-hidden bg-gradient-to-br from-slate-100 to-slate-50">
         <img
           src={course.image}
           alt={course.name}
           className="w-full h-full object-cover"
-          style={{ transform: hovered ? 'scale(1.08)' : 'scale(1)', transition: 'transform .5s ease' }}
+          style={{
+            transform: hovered ? 'scale(1.12)' : 'scale(1)',
+            transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 to-transparent" />
-        <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider co-gold-gradient">
-          {course.tag}
-        </span>
-        <span className="absolute right-3 bottom-3 text-3xl">{course.icon}</span>
-      </div>
-
-      <div className="p-5">
-        <h3 className="text-2xl font-bold text-slate-900 mb-2">{course.name}</h3>
-
-        <div className="flex flex-wrap gap-2 mb-3">
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
-            <BarChart3 className="w-3.5 h-3.5" /> {course.level}
-          </span>
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
-            <Clock className="w-3.5 h-3.5" /> {course.duration}
+        
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-900/20 to-transparent" />
+        
+        {/* Tag Badge */}
+        <div className="absolute top-4 left-4" style={{
+          animation: hovered ? 'slideInLeft 0.4s ease' : 'none',
+        }}>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide cp-gradient-text bg-white/70 backdrop-blur-sm border border-white/50 group-hover:shadow-lg group-hover:bg-white/90 transition-all duration-300">
+            <Sparkles className="w-3.5 h-3.5 group-hover:animate-spin" style={{
+              animationDuration: '2s',
+            }} />
+            {course.tag}
           </span>
         </div>
 
-        <p className="text-slate-600 text-sm leading-relaxed mb-4">{course.desc}</p>
+        {/* Icon Circle */}
+        <div className="absolute right-4 bottom-4 w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm border border-white/50 flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
+          {course.icon}
+        </div>
+      </div>
 
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-amber-700">View Details</span>
-          <span className="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold">+</span>
+      {/* Content */}
+      <div className="p-6">
+        <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-amber-500 group-hover:bg-clip-text transition-all duration-300">
+          {course.name}
+        </h3>
+
+        {/* Meta Tags */}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <span 
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-orange-100/60 text-orange-700 border border-orange-200/50 backdrop-blur group-hover:bg-orange-100 group-hover:shadow-md transition-all duration-300"
+            style={{
+              animation: hovered ? 'slideInUp 0.3s ease 0.05s both' : 'none',
+            }}
+          >
+            <BarChart3 className="w-3 h-3" /> {course.level}
+          </span>
+          <span 
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100/60 text-slate-600 border border-slate-200/50 backdrop-blur group-hover:bg-slate-100 group-hover:shadow-md transition-all duration-300"
+            style={{
+              animation: hovered ? 'slideInUp 0.3s ease 0.1s both' : 'none',
+            }}
+          >
+            <Clock className="w-3 h-3" /> {course.duration}
+          </span>
+        </div>
+
+        {/* Description */}
+        <p className="text-slate-600 text-sm leading-relaxed mb-4 line-clamp-3 group-hover:text-slate-700 transition-colors duration-300">
+          {course.desc}
+        </p>
+
+        {/* Footer CTA */}
+        <div className="flex items-center justify-between pt-3 cp-accent-border group-hover:border-orange-300 transition-all duration-300">
+          <span className="text-sm font-semibold text-slate-700 group-hover:text-orange-600 transition-colors duration-300">
+            Explore Course
+          </span>
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400/20 to-amber-400/20 text-orange-600 flex items-center justify-center font-bold group-hover:bg-gradient-to-br group-hover:from-orange-400 group-hover:to-amber-400 group-hover:text-white group-hover:scale-110 transition-all duration-300" style={{
+            animation: hovered ? 'wiggle 0.5s ease' : 'none',
+          }}>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+          </div>
         </div>
       </div>
     </div>
@@ -284,65 +436,97 @@ const CourseModal = ({ course, onClose }) => {
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[9999] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[9999] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white border border-amber-500/20 shadow-2xl"
+        className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl cp-glass shadow-2xl border border-white/80 cp-scale-in"
+        style={{
+          animation: 'scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        }}
       >
-        <div className="relative h-64">
+        {/* Hero Image Section */}
+        <div className="relative h-80 overflow-hidden bg-gradient-to-br from-slate-100 to-slate-50">
           <img src={course.image} alt={course.name} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent" />
+          
+          {/* Close Button */}
           <button
-            onClick={onClose}
-            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-slate-900 flex items-center justify-center"
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClose();
+            }}
+            className="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/90 hover:bg-white text-slate-900 flex items-center justify-center shadow-lg hover:scale-110 transition-all duration-300 z-50 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
-          <div className="absolute left-6 bottom-5">
-            <span className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider co-gold-gradient inline-block mb-2">
-              {course.tag}
-            </span>
-            <h2 className="text-3xl font-bold text-white">{course.icon} {course.name}</h2>
+
+          {/* Header Overlay */}
+          <div className="absolute inset-0 flex flex-col justify-end p-8">
+            <div className="inline-flex items-center gap-2 w-fit mb-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide cp-gradient-text bg-white/70 backdrop-blur-sm border border-white/50">
+                <Sparkles className="w-3.5 h-3.5" />
+                {course.tag}
+              </span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-white flex items-center gap-3">
+              <span className="text-3xl">{course.icon}</span>
+              {course.name}
+            </h2>
           </div>
         </div>
 
-        <div className="p-6 sm:p-8">
-          <div className="flex flex-wrap gap-2 mb-4">
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">
-              <BarChart3 className="w-3.5 h-3.5" /> {course.level}
+        {/* Content Section */}
+        <div className="p-8 sm:p-10">
+          {/* Meta Information */}
+          <div className="flex flex-wrap gap-3 mb-8">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100/60 text-orange-700 font-semibold text-sm border border-orange-200/50 backdrop-blur">
+              <BarChart3 className="w-4 h-4" /> {course.level}
             </span>
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
-              <Clock className="w-3.5 h-3.5" /> {course.duration}
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100/60 text-slate-600 font-semibold text-sm border border-slate-200/50 backdrop-blur">
+              <Clock className="w-4 h-4" /> {course.duration}
             </span>
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-              <CheckCircle className="w-3.5 h-3.5" /> Online and Offline
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-100/60 text-green-700 font-semibold text-sm border border-green-200/50 backdrop-blur">
+              <CheckCircle className="w-4 h-4" /> Live Classes
             </span>
           </div>
 
-          <p className="text-slate-600 leading-relaxed mb-5">{course.desc}</p>
+          {/* Description */}
+          <p className="text-slate-700 leading-relaxed mb-8 font-medium">
+            {course.desc}
+          </p>
 
-          <div className="rounded-2xl border border-amber-500/20 bg-amber-50 p-5 mb-6">
-            <h4 className="text-xl font-bold text-slate-900 mb-3">What You Will Learn</h4>
-            <div className="grid sm:grid-cols-2 gap-2">
-              {course.details.map((detail) => (
-                <div key={detail} className="flex items-start gap-2 text-sm text-slate-700">
-                  <CheckCircle className="w-4 h-4 mt-0.5 text-amber-700" />
-                  <span>{detail}</span>
+          {/* Learning Outcomes */}
+          <div className="rounded-2xl cp-glass border-2 border-orange-200/30 p-7 mb-8">
+            <h4 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-orange-500" />
+              What You Will Learn
+            </h4>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {course.details.map((detail, idx) => (
+                <div key={detail} className="flex items-start gap-3 text-sm text-slate-700 p-2 rounded-lg hover:bg-white/40 transition-colors" style={{
+                  animation: `revealUp 0.5s ease ${100 + idx * 50}ms both`,
+                }}>
+                  <CheckCircle className="w-5 h-5 mt-0.5 text-orange-500 flex-shrink-0" />
+                  <span className="leading-relaxed">{detail}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4">
             <Link to="/login" className="flex-1">
-              <button className="w-full co-gold-gradient rounded-xl py-3 font-semibold shadow-lg shadow-amber-700/25 hover:-translate-y-0.5 transition">
+              <button className="w-full cp-btn-primary px-6 py-4 font-semibold text-lg rounded-xl inline-flex items-center justify-center gap-2 group">
                 Enroll Now
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </Link>
             <Link to="/Contact-Us" className="flex-1">
-              <button className="w-full rounded-xl py-3 font-semibold border-2 border-slate-300 text-slate-700 hover:bg-slate-100 transition">
-                Free Enquiry
+              <button className="w-full cp-btn-secondary px-6 py-4 font-semibold text-lg rounded-xl hover:shadow-lg transition-all">
+                Free Counselling
               </button>
             </Link>
           </div>
@@ -356,58 +540,100 @@ const CoursesPage = () => {
   const [selected, setSelected] = useState(null);
 
   return (
-    <div className="min-h-screen bg-slate-50 overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 overflow-x-hidden cp-shell">
       <GlobalStyles />
       <NavBarpage />
 
-      <section className="relative min-h-[62vh] flex items-center justify-center overflow-hidden pt-20 sm:pt-24">
+      {/* Hero Section */}
+      <section className="relative min-h-[65vh] flex items-center justify-center overflow-hidden pt-28 sm:pt-32 pb-16">
+        {/* Background Image */}
         <img src={heroBg} alt="Courses hero" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-900/70 to-slate-950/90" />
+        
+        {/* Overlay Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-900/75 to-slate-950/80" />
+        
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 right-10 w-72 h-72 bg-orange-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 left-10 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+        </div>
 
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-amber-500/35 bg-amber-600/10 text-amber-300 text-xs sm:text-sm font-semibold tracking-wide co-fade-up">
-            <Music className="w-4 h-4" /> Our Programs
-          </span>
+        {/* Content */}
+        <div className="relative z-10 text-center px-4 max-w-5xl mx-auto">
+          {/* Tag */}
+          <div
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-orange-400/30 bg-orange-500/10 text-orange-300 text-xs sm:text-sm font-bold tracking-wide cp-fade-up backdrop-blur-sm"
+          >
+            <Music className="w-4 h-4" />
+            Explore Our Programs
+          </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mt-6 mb-4 co-fade-up-d1 text-slate-100">
-            Courses for <span className="co-text-gold">Every Soul</span>
+          {/* Main Heading */}
+          <h1
+            className="text-5xl sm:text-6xl md:text-7xl font-bold mt-6 mb-5 cp-fade-up-d1 text-white leading-tight"
+          >
+            Master Your <span className="cp-gradient-text">Musical Journey</span>
           </h1>
 
-          <p className="text-slate-300/85 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto co-fade-up-d2">
-            Structured programs for all ages and levels with certified instructors,
-            live practice, and personalized feedback.
+          {/* Subtitle */}
+          <p
+            className="text-slate-300/90 text-base sm:text-lg leading-relaxed max-w-3xl mx-auto cp-fade-up-d2 font-medium"
+          >
+            Learn from world-class instructors with personalized guidance, live performances, and certification programs. Your next musical breakthrough starts here.
           </p>
 
-          <div className="flex flex-wrap gap-5 justify-center mt-8 text-sm text-slate-300 co-fade-up-d2">
-            {['Online and Offline', 'All Levels', 'Performance Focused'].map((item) => (
-              <span key={item} className="inline-flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-amber-400" /> {item}
-              </span>
+          {/* Quick Stats */}
+          <div
+            className="flex flex-wrap gap-4 sm:gap-6 justify-center mt-10 cp-fade-up-d2"
+          >
+            {[
+              { icon: Music, label: '25+ Instruments' },
+              { icon: BarChart3, label: 'All Levels' },
+              { icon: CheckCircle, label: 'Online & Offline' },
+            ].map((stat, i) => (
+              <div key={i} className="flex items-center gap-2 text-slate-200">
+                <stat.icon className="w-4 h-4 text-orange-400" />
+                <span className="text-sm font-semibold">{stat.label}</span>
+              </div>
             ))}
           </div>
         </div>
-
       </section>
 
-      <section className="relative mt-0 z-20 px-4 pt-12 pb-8">
+      {/* Courses Grid Section */}
+      <section className="relative mt-0 z-20 px-4 pt-16 sm:pt-20 pb-16 sm:pb-20">
         <div className="container mx-auto max-w-7xl">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {/* Grid */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {courses.map((course, i) => (
               <CourseCard key={course.name} course={course} delay={i * 70} onOpen={setSelected} />
             ))}
           </div>
 
-          <div className="text-center mt-10">
-            <p className="text-slate-600 mb-4">Not sure which course to pick? We will help you choose.</p>
-            <Link to="/Contact-Us" className="inline-block co-gold-gradient px-8 py-3 rounded-xl font-semibold shadow-lg shadow-amber-700/25 hover:-translate-y-0.5 transition">
-              Get Free Counselling
-            </Link>
+          {/* CTA Section */}
+          <div className="mt-16 text-center">
+            <div className="cp-glass cp-glass-border rounded-3xl p-10 sm:p-12 max-w-2xl mx-auto">
+              <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-3">
+                Still Undecided?
+              </h3>
+              <p className="text-slate-600 mb-8 font-medium">
+                Our music experts can help you choose the perfect course to match your goals and experience level.
+              </p>
+              <Link to="/Contact-Us">
+                <button className="cp-btn-primary px-8 py-4 font-semibold text-lg rounded-xl inline-flex items-center gap-2 group">
+                  Get Expert Guidance
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
+      {/* Footer */}
       <FooterPage />
 
+      {/* Modal */}
       {selected && <CourseModal course={selected} onClose={() => setSelected(null)} />}
     </div>
   );
