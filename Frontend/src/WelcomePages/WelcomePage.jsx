@@ -159,6 +159,60 @@ const GlobalStyles = () => (
       box-shadow: 0 20px 40px rgba(239, 126, 26, 0.12);
     }
 
+    @keyframes sheenSweep {
+      0% { transform: translateX(-130%) skewX(-18deg); }
+      100% { transform: translateX(220%) skewX(-18deg); }
+    }
+
+    @keyframes iconBreath {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-3px) scale(1.06); }
+    }
+
+    .rp-feature-card,
+    .rp-program-card {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(239, 126, 26, 0.14);
+      background: #ffffff;
+      box-shadow:
+        0 16px 34px rgba(17, 24, 39, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s ease, border-color 0.35s ease;
+    }
+
+    .rp-feature-card::after,
+    .rp-program-card::after {
+      content: '';
+      position: absolute;
+      top: -120%;
+      left: -10%;
+      width: 34%;
+      height: 340%;
+      background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.45), transparent);
+      transform: translateX(-130%) skewX(-18deg);
+      pointer-events: none;
+    }
+
+    .rp-feature-card:hover,
+    .rp-program-card:hover {
+      transform: translateY(-10px) scale(1.012);
+      border-color: rgba(239, 126, 26, 0.34);
+      box-shadow:
+        0 30px 50px rgba(17, 24, 39, 0.14),
+        0 8px 20px rgba(239, 126, 26, 0.08);
+    }
+
+    .rp-feature-card:hover::after,
+    .rp-program-card:hover::after {
+      animation: sheenSweep 1.15s ease;
+    }
+
+    .rp-feature-icon,
+    .rp-program-icon {
+      animation: iconBreath 3.8s ease-in-out infinite;
+    }
+
     @keyframes revealUp {
       from { opacity: 0; transform: translateY(26px); }
       to { opacity: 1; transform: translateY(0); }
@@ -235,6 +289,9 @@ function SectionHeader({ tag, title, subtitle }) {
 }
 
 const RaadhyamWelcomeHome = () => {
+  const strengthsView = useInView(0.2);
+  const programsView = useInView(0.2);
+
   const features = [
     {
       icon: Piano,
@@ -416,15 +473,29 @@ const RaadhyamWelcomeHome = () => {
             subtitle="We do not just teach music - we shape musicians with care, creativity, and professional excellence."
           />
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
-            {features.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="group rp-glass rounded-3xl p-8 relative overflow-hidden bg-white/70 hover:bg-white/95 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(239,126,26,0.12)]">
-                <div className="absolute -right-6 -top-6 w-32 h-32 bg-gradient-to-br from-[#ef7e1a]/10 to-[#f4a14f]/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100/50 border border-orange-200/50 flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 group-hover:-rotate-3 transition-all duration-500 relative z-10">
+          <div ref={strengthsView.ref} className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+            {features.map(({ icon: Icon, title, desc }, idx) => (
+              <div
+                key={title}
+                className="group rp-feature-card rounded-3xl p-8"
+                style={{
+                  opacity: strengthsView.inView ? 1 : 0,
+                  transform: strengthsView.inView ? "translateY(0) scale(1)" : "translateY(26px) scale(0.97)",
+                  transition: `opacity 680ms ease ${idx * 90}ms, transform 680ms cubic-bezier(0.22, 1, 0.36, 1) ${idx * 90}ms`,
+                }}
+              >
+                <div className="absolute -right-10 -top-10 w-36 h-36 bg-gradient-to-br from-[#ef7e1a]/18 to-[#f4a14f]/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+                <div className="inline-flex items-center rounded-full border border-[#ef7e1a]/20 bg-[#ef7e1a]/10 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#c25700] mb-5 relative z-10">
+                  Signature Learning
+                </div>
+                <div className="rp-feature-icon w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100/70 border border-orange-200/60 flex items-center justify-center mb-6 shadow-md group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 relative z-10">
                   <Icon className="w-8 h-8 text-[#ef7e1a]" />
                 </div>
-                <h3 className="text-xl font-extrabold text-gray-900 mb-3 relative z-10">{title}</h3>
+                <h3 className="text-xl font-extrabold text-gray-900 mb-3 relative z-10 group-hover:text-[#b64f00] transition-colors">{title}</h3>
                 <p className="text-gray-600 font-medium text-sm leading-relaxed relative z-10">{desc}</p>
+                <div className="mt-6 flex items-center gap-2 text-[#c25700] text-xs font-bold uppercase tracking-[0.12em] relative z-10">
+                  Learn More <ChevronRight className="w-4 h-4" />
+                </div>
               </div>
             ))}
           </div>
@@ -437,15 +508,29 @@ const RaadhyamWelcomeHome = () => {
             subtitle="Structured courses for all ages and skill levels with certified instructors, real-time practice, and personalized feedback."
           />
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
-            {courses.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="group rp-glass rounded-3xl p-7 flex flex-col bg-white/50 hover:bg-white transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_rgba(239,126,26,0.1)] relative overflow-hidden">
-                <div className="absolute -left-6 -bottom-6 w-24 h-24 bg-gradient-to-tr from-[#ef7e1a]/10 to-transparent rounded-full blur-xl group-hover:scale-150 transition-transform duration-700"></div>
-                <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-100 shadow-sm flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 relative z-10">
+          <div ref={programsView.ref} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+            {courses.map(({ icon: Icon, title, desc }, idx) => (
+              <div
+                key={title}
+                className="group rp-program-card rounded-3xl p-7 flex flex-col"
+                style={{
+                  opacity: programsView.inView ? 1 : 0,
+                  transform: programsView.inView ? "translateY(0) scale(1)" : "translateY(24px) scale(0.97)",
+                  transition: `opacity 650ms ease ${idx * 80}ms, transform 650ms cubic-bezier(0.22, 1, 0.36, 1) ${idx * 80}ms`,
+                }}
+              >
+                <div className="absolute -left-8 -bottom-8 w-28 h-28 bg-gradient-to-tr from-[#ef7e1a]/14 to-transparent rounded-full blur-xl group-hover:scale-150 transition-transform duration-700"></div>
+                <div className="inline-flex w-fit items-center rounded-full border border-[#ef7e1a]/20 bg-white/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-[#c25700] mb-4 relative z-10">
+                  Program
+                </div>
+                <div className="rp-program-icon w-12 h-12 rounded-xl bg-gradient-to-br from-orange-50 to-orange-100/80 border border-orange-100 shadow-sm flex items-center justify-center mb-5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 relative z-10">
                   <Icon className="w-6 h-6 text-[#ef7e1a]" />
                 </div>
-                <h3 className="font-extrabold text-gray-900 text-lg mb-2 relative z-10">{title}</h3>
+                <h3 className="font-extrabold text-gray-900 text-lg mb-2 relative z-10 group-hover:text-[#b64f00] transition-colors">{title}</h3>
                 <p className="text-gray-600 font-medium text-sm leading-relaxed flex-1 relative z-10">{desc}</p>
+                <div className="mt-5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#c25700] relative z-10">
+                  Enroll Available
+                </div>
               </div>
             ))}
           </div>
