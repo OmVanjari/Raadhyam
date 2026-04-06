@@ -65,29 +65,62 @@ const GlobalStyles = () => (
     .au-pulse-dot { animation: pulseDot 2s ease infinite; }
 
     .au-card {
-      background: rgba(255,255,255,.86);
+      background: rgba(255,255,255,.92);
       border: 1px solid rgba(217,119,6,.2);
       border-radius: 20px;
       backdrop-filter: blur(10px);
-      transition: transform .35s ease, box-shadow .35s ease, border-color .35s ease;
+      position: relative;
+      overflow: hidden;
+      transition: transform .4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow .4s ease, border-color .4s ease;
+    }
+    .au-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      padding: 2px;
+      background: linear-gradient(135deg, rgba(245,158,11,.6), rgba(217,119,6,.6), rgba(180,83,9,.6));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0;
+      transition: opacity .4s ease;
     }
     .au-card:hover {
-      transform: translateY(-8px);
-      border-color: rgba(217,119,6,.45);
-      box-shadow: 0 24px 56px rgba(30,41,59,.13);
+      transform: translateY(-12px) scale(1.02);
+      border-color: rgba(217,119,6,.6);
+      box-shadow: 0 28px 64px rgba(217,119,6,.18), 0 12px 24px rgba(30,41,59,.12);
+    }
+    .au-card:hover::before {
+      opacity: 1;
     }
 
     .au-dark-card {
-      background: linear-gradient(160deg, rgba(15,23,42,.84), rgba(30,41,59,.82));
+      background: linear-gradient(160deg, rgba(15,23,42,.88), rgba(30,41,59,.85));
       border: 1px solid rgba(245,158,11,.35);
       border-radius: 20px;
       box-shadow: 0 16px 36px rgba(2,6,23,.32);
-      transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+      position: relative;
+      overflow: hidden;
+      transition: transform .4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow .4s ease, border-color .4s ease, background .4s ease;
+    }
+    .au-dark-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      background: radial-gradient(circle at 50% 0%, rgba(245,158,11,.15), transparent 70%);
+      opacity: 0;
+      transition: opacity .4s ease;
     }
     .au-dark-card:hover {
-      transform: translateY(-6px);
-      border-color: rgba(245,158,11,.62);
-      box-shadow: 0 22px 46px rgba(2,6,23,.45);
+      transform: translateY(-10px) scale(1.02);
+      border-color: rgba(245,158,11,.75);
+      box-shadow: 0 28px 56px rgba(245,158,11,.25), 0 12px 28px rgba(2,6,23,.45);
+      background: linear-gradient(160deg, rgba(15,23,42,.92), rgba(30,41,59,.9));
+    }
+    .au-dark-card:hover::before {
+      opacity: 1;
     }
 
     .au-gold-gradient {
@@ -126,21 +159,42 @@ const SectionHeading = ({ tag, title, subtitle }) => {
 
 const StatCard = ({ stat, delay }) => {
   const { ref, inView } = useInView(0.2);
+  const [hovered, setHovered] = useState(false);
   const Icon = stat.icon;
   return (
     <div
       ref={ref}
-      className="au-dark-card p-6 text-center"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="au-dark-card p-6 text-center cursor-pointer"
       style={{
         opacity: inView ? 1 : 0,
         transform: inView ? 'translateY(0)' : 'translateY(24px)',
-        transition: `opacity .7s ease ${delay}ms, transform .7s ease ${delay}ms`,
+        transition: `opacity .7s ease ${delay}ms`,
       }}
     >
-      <div className="w-12 h-12 mx-auto rounded-xl bg-amber-400/20 flex items-center justify-center mb-3">
-        <Icon className="w-6 h-6 text-amber-300" />
+      <div 
+        className="w-14 h-14 mx-auto rounded-xl flex items-center justify-center mb-3 transition-all duration-500"
+        style={{
+          background: hovered ? 'linear-gradient(135deg, #FCD34D, #F59E0B)' : 'rgba(251,191,36,.2)',
+          transform: hovered ? 'scale(1.15) rotate(360deg)' : 'scale(1) rotate(0deg)',
+          boxShadow: hovered ? '0 8px 24px rgba(251,191,36,.4)' : 'none',
+        }}
+      >
+        <Icon 
+          className="w-7 h-7 transition-colors duration-300" 
+          style={{ color: hovered ? '#78350F' : '#FCD34D' }}
+        />
       </div>
-      <p className="text-3xl font-bold text-amber-300 mb-1">{stat.number}</p>
+      <p 
+        className="text-3xl font-bold mb-1 transition-all duration-300"
+        style={{ 
+          color: hovered ? '#FCD34D' : '#FDE68A',
+          transform: hovered ? 'scale(1.1)' : 'scale(1)',
+        }}
+      >
+        {stat.number}
+      </p>
       <p className="text-slate-200/85 text-xs uppercase tracking-wider font-semibold">{stat.label}</p>
     </div>
   );
@@ -155,18 +209,43 @@ const ValueCard = ({ value, delay }) => {
       ref={ref}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="au-card p-7"
+      className="au-card p-7 cursor-pointer relative group"
       style={{
         opacity: inView ? 1 : 0,
-        transform: inView ? (hovered ? 'translateY(-8px)' : 'translateY(0)') : 'translateY(24px)',
-        transition: `opacity .7s ease ${delay}ms, transform .35s ease, box-shadow .35s ease, border-color .35s ease`,
+        transform: inView ? 'translateY(0)' : 'translateY(24px)',
+        transition: `opacity .7s ease ${delay}ms`,
       }}
     >
-      <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center mb-4">
-        <Icon className="w-6 h-6 text-amber-700" />
+      <div 
+        className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 relative transition-all duration-500"
+        style={{
+          background: hovered ? 'linear-gradient(135deg, #F59E0B, #D97706)' : '#FEF3C7',
+          transform: hovered ? 'scale(1.1) rotate(5deg)' : 'scale(1) rotate(0deg)',
+          boxShadow: hovered ? '0 8px 20px rgba(245,158,11,.3)' : 'none',
+        }}
+      >
+        <Icon 
+          className="w-7 h-7 transition-all duration-300" 
+          style={{ 
+            color: hovered ? '#FFF' : '#B45309',
+            transform: hovered ? 'scale(1.1)' : 'scale(1)'
+          }}
+        />
       </div>
-      <h3 className="text-xl font-semibold text-slate-900 mb-2">{value.title}</h3>
+      <h3 
+        className="text-xl font-semibold mb-2 transition-colors duration-300"
+        style={{ color: hovered ? '#D97706' : '#0F172A' }}
+      >
+        {value.title}
+      </h3>
       <p className="text-slate-600 leading-relaxed text-sm">{value.description}</p>
+      <div 
+        className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-amber-600 rounded-b-xl transition-all duration-500"
+        style={{ 
+          opacity: hovered ? 1 : 0,
+          transform: hovered ? 'scaleX(1)' : 'scaleX(0)',
+        }}
+      />
     </div>
   );
 };
@@ -179,19 +258,34 @@ const TeamCard = ({ member, delay }) => {
       ref={ref}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="au-card p-7"
+      className="au-card p-7 cursor-pointer"
       style={{
         opacity: inView ? 1 : 0,
-        transform: inView ? (hovered ? 'translateY(-8px)' : 'translateY(0)') : 'translateY(24px)',
-        transition: `opacity .7s ease ${delay}ms, transform .35s ease, box-shadow .35s ease, border-color .35s ease`,
+        transform: inView ? 'translateY(0)' : 'translateY(24px)',
+        transition: `opacity .7s ease ${delay}ms`,
       }}
     >
-      <div className="w-36 h-36 rounded-full overflow-hidden mx-auto mb-4 border-4 border-amber-500/30">
+      <div 
+        className="w-36 h-36 rounded-full overflow-hidden mx-auto mb-4 relative"
+        style={{
+          border: hovered ? '4px solid #F59E0B' : '4px solid rgba(245,158,11,.3)',
+          transition: 'border-color .4s ease',
+          boxShadow: hovered ? '0 8px 24px rgba(245,158,11,.4), 0 0 0 8px rgba(245,158,11,.1)' : 'none',
+        }}
+      >
         <img 
           src={member.image} 
           alt={member.name} 
           className="w-full h-full object-cover"
-          style={{ transform: hovered ? 'scale(1.08)' : 'scale(1)', transition: 'transform .5s ease' }}
+          style={{ 
+            transform: hovered ? 'scale(1.15)' : 'scale(1)', 
+            transition: 'transform .6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            filter: hovered ? 'brightness(1.1) contrast(1.05)' : 'brightness(1)'
+          }}
+        />
+        <div 
+          className="absolute inset-0 bg-gradient-to-t from-amber-600/30 to-transparent"
+          style={{ opacity: hovered ? 1 : 0, transition: 'opacity .4s ease' }}
         />
       </div>
       <h3 className="text-2xl font-bold text-slate-900 text-center">{member.name}</h3>
@@ -226,23 +320,41 @@ const InstrumentCard = ({ inst, index }) => {
       ref={ref}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="au-card overflow-hidden"
+      className="au-card overflow-hidden cursor-pointer relative"
       style={{
         opacity: inView ? 1 : 0,
-        transform: inView ? (hovered ? 'translateY(-8px)' : 'translateY(0)') : 'translateY(20px)',
-        transition: `opacity .6s ease ${(index % 6) * 60}ms, transform .35s ease, box-shadow .35s ease, border-color .35s ease`,
+        transform: inView ? 'translateY(0)' : 'translateY(20px)',
+        transition: `opacity .6s ease ${(index % 6) * 60}ms`,
       }}
     >
-      <div className="h-28 overflow-hidden">
+      <div className="h-28 overflow-hidden relative">
         <img 
           src={inst.image} 
           alt={inst.name} 
           className="w-full h-full object-cover"
-          style={{ transform: hovered ? 'scale(1.08)' : 'scale(1)', transition: 'transform .5s ease' }}
+          style={{ 
+            transform: hovered ? 'scale(1.2) rotate(3deg)' : 'scale(1)', 
+            transition: 'transform .6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            filter: hovered ? 'brightness(1.15) saturate(1.2)' : 'brightness(1)'
+          }}
+        />
+        <div 
+          className="absolute inset-0 bg-gradient-to-t from-amber-600/60 via-amber-500/20 to-transparent"
+          style={{ opacity: hovered ? 1 : 0, transition: 'opacity .4s ease' }}
         />
       </div>
-      <div className="p-3 text-center">
-        <span className="text-sm font-semibold text-slate-800">{inst.name}</span>
+      <div 
+        className="p-3 text-center transition-all duration-300"
+        style={{ 
+          background: hovered ? 'linear-gradient(135deg, #FEF3C7, #FDE68A)' : 'transparent'
+        }}
+      >
+        <span 
+          className="text-sm font-semibold transition-colors duration-300"
+          style={{ color: hovered ? '#92400E' : '#1E293B' }}
+        >
+          {inst.name}
+        </span>
       </div>
     </div>
   );
@@ -256,11 +368,11 @@ const FacilityCard = ({ facility, delay }) => {
       ref={ref}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="au-card overflow-hidden"
+      className="au-card group cursor-pointer"
       style={{
         opacity: inView ? 1 : 0,
-        transform: inView ? (hovered ? 'translateY(-8px)' : 'translateY(0)') : 'translateY(22px)',
-        transition: `opacity .7s ease ${delay}ms, transform .35s ease, box-shadow .35s ease, border-color .35s ease`,
+        transform: inView ? 'translateY(0)' : 'translateY(22px)',
+        transition: `opacity .7s ease ${delay}ms`,
       }}
     >
       <div className="h-48 overflow-hidden relative">
@@ -268,12 +380,25 @@ const FacilityCard = ({ facility, delay }) => {
           src={facility.image} 
           alt={facility.title} 
           className="w-full h-full object-cover"
-          style={{ transform: hovered ? 'scale(1.08)' : 'scale(1)', transition: 'transform .5s ease' }}
+          style={{ 
+            transform: hovered ? 'scale(1.15) rotate(2deg)' : 'scale(1)', 
+            transition: 'transform .6s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            filter: hovered ? 'brightness(1.1)' : 'brightness(1)'
+          }}
+        />
+        <div 
+          className="absolute inset-0 bg-gradient-to-t from-amber-900/60 via-transparent to-transparent"
+          style={{ opacity: hovered ? 1 : 0, transition: 'opacity .4s ease' }}
         />
         <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-slate-900/50 to-transparent" />
       </div>
-      <div className="p-6">
-        <h3 className="text-xl font-semibold text-slate-900 mb-2">{facility.title}</h3>
+      <div className="p-6 relative">
+        <h3 
+          className="text-xl font-semibold mb-2 transition-colors duration-300"
+          style={{ color: hovered ? '#D97706' : '#0F172A' }}
+        >
+          {facility.title}
+        </h3>
         <p className="text-slate-600 text-sm leading-relaxed">{facility.description}</p>
       </div>
     </div>
@@ -288,17 +413,31 @@ const MissionCard = ({ Icon, title, texts, delay }) => {
       ref={ref}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="au-card p-8"
+      className="au-card p-8 cursor-pointer relative"
       style={{
         opacity: inView ? 1 : 0,
-        transform: inView ? (hovered ? 'translateY(-8px)' : 'translateY(0)') : 'translateY(22px)',
-        transition: `opacity .7s ease ${delay}ms, transform .35s ease, box-shadow .35s ease, border-color .35s ease`,
+        transform: inView ? 'translateY(0)' : 'translateY(22px)',
+        transition: `opacity .7s ease ${delay}ms`,
       }}
     >
-      <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center mb-4">
-        <Icon className="w-6 h-6 text-amber-700" />
+      <div 
+        className="w-14 h-14 rounded-xl flex items-center justify-center mb-4 transition-all duration-500"
+        style={{
+          background: hovered ? 'linear-gradient(135deg, #F59E0B, #D97706)' : '#FEF3C7',
+          transform: hovered ? 'rotate(360deg) scale(1.1)' : 'rotate(0deg) scale(1)',
+        }}
+      >
+        <Icon 
+          className="w-7 h-7 transition-colors duration-300" 
+          style={{ color: hovered ? '#FFF' : '#B45309' }}
+        />
       </div>
-      <h3 className="text-2xl font-bold text-slate-900 mb-3">{title}</h3>
+      <h3 
+        className="text-2xl font-bold mb-3 transition-colors duration-300"
+        style={{ color: hovered ? '#D97706' : '#0F172A' }}
+      >
+        {title}
+      </h3>
       <div className="space-y-3">
         {texts.map((t) => (
           <p key={t} className="text-slate-600 text-sm leading-relaxed">{t}</p>
@@ -460,16 +599,71 @@ const AboutUs = () => {
 
       <section className="py-20 px-4 bg-white">
         <div className="container mx-auto max-w-7xl grid lg:grid-cols-2 gap-10 items-center">
-          <div className="relative">
-            <img
-              src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80"
-              alt="Our Music Studio"
-              className="w-full rounded-3xl shadow-2xl border border-amber-500/30"
-            />
-            <div className="absolute -bottom-4 left-6 bg-white border border-amber-500/25 rounded-xl px-4 py-2 shadow-md">
+          <div 
+            className="relative group cursor-pointer"
+            onMouseEnter={(e) => e.currentTarget.classList.add('hovered')}
+            onMouseLeave={(e) => e.currentTarget.classList.remove('hovered')}
+          >
+            <div className="relative overflow-hidden rounded-3xl">
+              <img
+                src="https://images.unsplash.com/photo-1511379938547-c1f69419868d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1170&q=80"
+                alt="Our Music Studio"
+                className="w-full rounded-3xl shadow-2xl border border-amber-500/30 transition-all duration-700"
+                style={{
+                  transform: 'scale(1)',
+                  filter: 'brightness(1)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.08) rotate(1deg)';
+                  e.currentTarget.style.filter = 'brightness(1.1) contrast(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
+                  e.currentTarget.style.filter = 'brightness(1)';
+                }}
+              />
+              <div 
+                className="absolute inset-0 bg-gradient-to-t from-amber-900/40 via-amber-600/10 to-transparent rounded-3xl opacity-0 transition-opacity duration-500 pointer-events-none"
+                style={{
+                  opacity: 0,
+                }}
+                onMouseEnter={(e) => {
+                  const parent = e.currentTarget.parentElement;
+                  if (parent?.classList.contains('hovered')) {
+                    e.currentTarget.style.opacity = '1';
+                  }
+                }}
+              />
+            </div>
+            <div 
+              className="absolute -bottom-4 left-6 bg-white border rounded-xl px-4 py-2 shadow-md transition-all duration-500"
+              style={{
+                borderColor: 'rgba(245,158,11,.25)',
+                transform: 'translateY(0) scale(1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#F59E0B';
+                e.currentTarget.style.transform = 'translateY(-4px) scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 12px 28px rgba(245,158,11,.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(245,158,11,.25)';
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = '0 4px 6px rgba(0,0,0,.1)';
+              }}
+            >
               <p className="text-xs uppercase tracking-[0.16em] text-amber-700 font-bold">Est. 2012</p>
               <p className="text-sm text-slate-700 font-semibold">10+ Years of Music</p>
             </div>
+            <div 
+              className="absolute inset-0 rounded-3xl pointer-events-none transition-all duration-500"
+              style={{
+                boxShadow: '0 0 0 0px rgba(245,158,11,0)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 0 0 4px rgba(245,158,11,.3), 0 0 0 8px rgba(245,158,11,.15)';
+              }}
+            />
           </div>
           <div>
             <SectionHeading tag="Our Journey" title="Our Story & Journey" />
