@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { 
   Users, 
   Search, 
@@ -18,134 +19,76 @@ import {
   Sparkles,
   GraduationCap,
   Target,
-  Zap
+  Zap,
+  RefreshCw,
+  AlertCircle,
+  EyeOff
 } from 'lucide-react';
 
 const StudentsPage = () => {
+  const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isVisible, setIsVisible] = useState(false);
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     setIsVisible(true);
+    fetchStudents();
   }, []);
 
-  // Mock student data with more details
-  const mockStudents = [
-    {
-      id: 1,
-      name: 'Rahul Sharma',
-      email: 'rahul.sharma@email.com',
-      phone: '+91 98765 43210',
-      enrolledCourses: 3,
-      completedCourses: 1,
-      status: 'active',
-      joinedDate: '2024-01-15',
-      lastActive: '2 hours ago',
-      progress: 75,
-      avatar: 'RS',
-      totalLessons: 45,
-      completedLessons: 34,
-      rating: 4.8
-    },
-    {
-      id: 2,
-      name: 'Priya Patel',
-      email: 'priya.patel@email.com',
-      phone: '+91 98765 43211',
-      enrolledCourses: 5,
-      completedCourses: 3,
-      status: 'active',
-      joinedDate: '2024-02-20',
-      lastActive: '1 day ago',
-      progress: 92,
-      avatar: 'PP',
-      totalLessons: 68,
-      completedLessons: 63,
-      rating: 4.9
-    },
-    {
-      id: 3,
-      name: 'Amit Kumar',
-      email: 'amit.kumar@email.com',
-      phone: '+91 98765 43212',
-      enrolledCourses: 2,
-      completedCourses: 0,
-      status: 'inactive',
-      joinedDate: '2024-03-10',
-      lastActive: '2 weeks ago',
-      progress: 35,
-      avatar: 'AK',
-      totalLessons: 30,
-      completedLessons: 11,
-      rating: 4.2
-    },
-    {
-      id: 4,
-      name: 'Sneha Reddy',
-      email: 'sneha.reddy@email.com',
-      phone: '+91 98765 43213',
-      enrolledCourses: 4,
-      completedCourses: 2,
-      status: 'active',
-      joinedDate: '2024-01-25',
-      lastActive: '5 hours ago',
-      progress: 88,
-      avatar: 'SR',
-      totalLessons: 52,
-      completedLessons: 46,
-      rating: 4.7
-    },
-    {
-      id: 5,
-      name: 'Vikram Singh',
-      email: 'vikram.singh@email.com',
-      phone: '+91 98765 43214',
-      enrolledCourses: 6,
-      completedCourses: 4,
-      status: 'active',
-      joinedDate: '2023-12-05',
-      lastActive: '30 minutes ago',
-      progress: 95,
-      avatar: 'VS',
-      totalLessons: 80,
-      completedLessons: 76,
-      rating: 5.0
-    },
-    {
-      id: 6,
-      name: 'Anjali Mehta',
-      email: 'anjali.mehta@email.com',
-      phone: '+91 98765 43215',
-      enrolledCourses: 1,
-      completedCourses: 0,
-      status: 'active',
-      joinedDate: '2024-03-28',
-      lastActive: '1 hour ago',
-      progress: 15,
-      avatar: 'AM',
-      totalLessons: 15,
-      completedLessons: 2,
-      rating: 4.0
-    }
-  ];
+  const getAxiosConfig = () => {
+    const token = localStorage.getItem('token');
+    return {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+        'Content-Type': 'application/json'
+      }
+    };
+  };
 
-  const filteredStudents = mockStudents.filter(student => {
-    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || student.status === statusFilter;
+  const fetchStudents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await axios.get('/api/admin/users', getAxiosConfig());
+      // Handle both array response and { data: [] } response
+      const usersData = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data.users || response.data.data || []);
+      setStudents(usersData);
+    } catch (err) {
+      console.error('Error fetching students:', err);
+      setError(err.response?.data?.message || 'Failed to load students');
+      setStudents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter students based on search and status
+  const filteredStudents = students.filter(student => {
+    const studentName = student.name || student.username || '';
+    const studentEmail = student.email || '';
+    const matchesSearch = studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         studentEmail.toLowerCase().includes(searchTerm.toLowerCase());
+    const studentStatus = student.status || student.isActive ? 'active' : 'inactive';
+    const matchesStatus = statusFilter === 'all' || studentStatus === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
+  // Calculate stats from real data
   const stats = {
-    total: mockStudents.length,
-    active: mockStudents.filter(s => s.status === 'active').length,
-    inactive: mockStudents.filter(s => s.status === 'inactive').length,
-    avgProgress: Math.round(mockStudents.reduce((sum, s) => sum + s.progress, 0) / mockStudents.length)
+    total: students.length,
+    active: students.filter(s => s.status !== 'Deleted' && s.status !== 'Inactive').length,
+    inactive: students.filter(s => s.status === 'Deleted' || s.status === 'Inactive').length,
+    avgProgress: students.length > 0 ? Math.round(students.reduce((sum, s) => sum + (s.progress || 50), 0) / students.length) : 0
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (student) => {
+    const status = student.status === 'Deleted' || student.status === 'Inactive' ? 'inactive' : 'active';
     if (status === 'active') {
       return (
         <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/50 hover:scale-110 transition-transform duration-300">
@@ -216,6 +159,47 @@ const StudentsPage = () => {
     );
   };
 
+  // Get avatar initials from name
+  const getAvatarInitials = (student) => {
+    const name = student.name || student.username || student.email || 'U';
+    if (name === 'U') return 'U';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  if (loading && students.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-amber-200 rounded-full animate-spin"></div>
+          <div className="w-16 h-16 border-t-4 border-amber-500 rounded-full animate-spin absolute top-0 left-0"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Users className="w-6 h-6 text-amber-600 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && students.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Students</h3>
+        <p className="text-gray-600 mb-6">{error}</p>
+        <button
+          onClick={fetchStudents}
+          className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 font-bold shadow-lg"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Animated Header */}
@@ -233,6 +217,14 @@ const StudentsPage = () => {
               Manage student enrollments and track progress
             </p>
           </div>
+          <button
+            onClick={fetchStudents}
+            disabled={loading}
+            className="px-5 py-2.5 border-2 border-amber-300 text-amber-700 rounded-xl hover:bg-amber-50 transition-all duration-300 flex items-center disabled:opacity-50 font-semibold"
+          >
+            <RefreshCw size={20} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
         </div>
       </div>
 
@@ -310,11 +302,12 @@ const StudentsPage = () => {
       {/* Students Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredStudents.map((student, index) => {
-          const isHovered = hoveredCard === student.id;
+          const isHovered = hoveredCard === student._id;
+          const studentStatus = student.status === 'Deleted' || student.status === 'Inactive' ? 'inactive' : 'active';
           
           return (
             <div
-              key={student.id}
+              key={student._id}
               className={`group relative bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden cursor-pointer ${
                 isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
@@ -322,7 +315,7 @@ const StudentsPage = () => {
                 transitionDelay: `${500 + index * 100}ms`,
                 animation: isHovered ? 'pulse 2s ease-in-out infinite' : 'none'
               }}
-              onMouseEnter={() => setHoveredCard(student.id)}
+              onMouseEnter={() => setHoveredCard(student._id)}
               onMouseLeave={() => setHoveredCard(null)}
             >
               {/* Background gradient */}
@@ -340,19 +333,19 @@ const StudentsPage = () => {
                     <div className={`relative ${isHovered ? 'scale-110 rotate-6' : ''} transition-all duration-300`}>
                       <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-500 rounded-full blur-md opacity-50 group-hover:opacity-75 transition-opacity"></div>
                       <div className="relative w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-500 rounded-full flex items-center justify-center shadow-lg">
-                        <span className="text-white font-bold text-xl">{student.avatar}</span>
+                        <span className="text-white font-bold text-xl">{getAvatarInitials(student)}</span>
                       </div>
                       {/* Status indicator */}
                       <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white ${
-                        student.status === 'active' ? 'bg-green-500' : 'bg-gray-400'
-                      } ${student.status === 'active' ? 'animate-pulse' : ''}`}></div>
+                        studentStatus === 'active' ? 'bg-green-500' : 'bg-gray-400'
+                      } ${studentStatus === 'active' ? 'animate-pulse' : ''}`}></div>
                     </div>
                     <div>
                       <h3 className={`text-lg font-bold text-gray-900 transition-colors duration-300 ${
                         isHovered ? 'text-amber-600' : ''
-                      }`}>{student.name}</h3>
+                      }`}>{student.name || student.username || 'Student'}</h3>
                       <div className="mt-1">
-                        {getStatusBadge(student.status)}
+                        {getStatusBadge(student)}
                       </div>
                     </div>
                   </div>
@@ -360,18 +353,24 @@ const StudentsPage = () => {
 
                 {/* Contact Info */}
                 <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-sm text-gray-600 hover:text-amber-600 transition-colors">
-                    <Mail size={14} className="mr-2 text-amber-500" />
-                    {student.email}
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600 hover:text-amber-600 transition-colors">
-                    <Phone size={14} className="mr-2 text-amber-500" />
-                    {student.phone}
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Clock size={14} className="mr-2 text-amber-500" />
-                    Last active: {student.lastActive}
-                  </div>
+                  {student.email && (
+                    <div className="flex items-center text-sm text-gray-600 hover:text-amber-600 transition-colors">
+                      <Mail size={14} className="mr-2 text-amber-500" />
+                      <span className="truncate">{student.email}</span>
+                    </div>
+                  )}
+                  {student.phone && (
+                    <div className="flex items-center text-sm text-gray-600 hover:text-amber-600 transition-colors">
+                      <Phone size={14} className="mr-2 text-amber-500" />
+                      {student.phone}
+                    </div>
+                  )}
+                  {student.lastActive && (
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Clock size={14} className="mr-2 text-amber-500" />
+                      Last active: {student.lastActive}
+                    </div>
+                  )}
                 </div>
 
                 {/* Stats */}
@@ -379,14 +378,14 @@ const StudentsPage = () => {
                   <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 hover:scale-105 transition-transform duration-300">
                     <div className="flex items-center justify-between">
                       <BookOpen size={18} className="text-blue-600" />
-                      <span className="text-2xl font-bold text-blue-600">{student.enrolledCourses}</span>
+                      <span className="text-2xl font-bold text-blue-600">{student.enrolledCourses || student.coursesEnrolled?.length || 0}</span>
                     </div>
                     <p className="text-xs text-blue-700 font-semibold mt-1">Enrolled</p>
                   </div>
                   <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-3 hover:scale-105 transition-transform duration-300">
                     <div className="flex items-center justify-between">
                       <Award size={18} className="text-green-600" />
-                      <span className="text-2xl font-bold text-green-600">{student.completedCourses}</span>
+                      <span className="text-2xl font-bold text-green-600">{student.completedCourses || 0}</span>
                     </div>
                     <p className="text-xs text-green-700 font-semibold mt-1">Completed</p>
                   </div>
@@ -399,13 +398,13 @@ const StudentsPage = () => {
                       <Target size={14} className="mr-1 text-amber-500" />
                       Overall Progress
                     </span>
-                    <span className="text-sm font-bold text-amber-600">{student.progress}%</span>
+                    <span className="text-sm font-bold text-amber-600">{student.progress || 50}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
                     <div 
                       className="h-3 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-600 rounded-full transition-all duration-1000 animate-shimmer relative"
                       style={{ 
-                        width: `${student.progress}%`,
+                        width: `${student.progress || 50}%`,
                         backgroundSize: '200% 100%'
                       }}
                     >
@@ -413,10 +412,10 @@ const StudentsPage = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-                    <span>{student.completedLessons} / {student.totalLessons} lessons</span>
+                    <span>{student.completedLessons || 0} / {student.totalLessons || 0} lessons</span>
                     <span className="flex items-center">
                       <Star size={12} className="mr-1 text-yellow-500 fill-current" />
-                      {student.rating}
+                      {student.rating || '0.0'}
                     </span>
                   </div>
                 </div>
@@ -425,7 +424,7 @@ const StudentsPage = () => {
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                   <div className="flex items-center text-xs text-gray-500">
                     <Calendar size={12} className="mr-1" />
-                    Joined {new Date(student.joinedDate).toLocaleDateString()}
+                    Joined {student.createdAt ? new Date(student.createdAt).toLocaleDateString() : 'N/A'}
                   </div>
                   <button className="text-white bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg shadow-amber-400/50 flex items-center text-sm font-semibold">
                     <Eye size={14} className="mr-1" />

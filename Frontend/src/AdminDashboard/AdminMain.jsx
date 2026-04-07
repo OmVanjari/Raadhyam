@@ -181,7 +181,11 @@ const MainDashboardAdmin = () => {
   const fetchMusicNotes = async () => {
     try {
       const response = await axios.get('/api/admin/music-notes', getAxiosConfig());
-      setMusicNotes(response.data.notes || []);
+      // Handle both { notes: [] } and { data: [] } response formats
+      const notesData = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data.notes || response.data.data || []);
+      setMusicNotes(notesData);
     } catch (error) {
       console.error('Error fetching music notes:', error);
       setMusicNotes([]);

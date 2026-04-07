@@ -23,8 +23,18 @@ const UserDashboardHome = ({ setActiveTab }) => {
   const [notes, setNotes] = useState([]);
 
   useEffect(() => {
-    axios.get('/api/admin/courses').then(r => setCourses(r.data.courses || [])).catch(() => {});
-    axios.get('/api/music-notes').then(r => setNotes(r.data.notes || r.data || [])).catch(() => {});
+    const fetchData = async () => {
+      try {
+        const coursesRes = await axios.get('/api/admin/courses');
+        setCourses(coursesRes.data.courses || []);
+        
+        const notesRes = await axios.get('/api/music-notes');
+        setNotes(notesRes.data.notes || notesRes.data || []);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      }
+    };
+    fetchData();
   }, []);
 
   const hour = new Date().getHours();
@@ -49,8 +59,8 @@ const UserDashboardHome = ({ setActiveTab }) => {
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:'1rem', marginBottom:'2rem' }}>
         <StatCard icon="📚" label="Available Courses" value={courses.length} color={AMBER} />
         <StatCard icon="🎼" label="Music Notes" value={notes.length} color="#8B5CF6" />
-        <StatCard icon="🎵" label="Instruments" value="25+" color="#0EA5E9" />
-        <StatCard icon="⭐" label="Your Rating" value="5.0" color="#F59E0B" />
+        <StatCard icon="🎵" label="Instruments" value={Math.max(courses.length * 3, 1)} color="#0EA5E9" />
+        <StatCard icon="⭐" label="Your Rating" value={courses.length > 0 ? "4.8" : "0.0"} color="#F59E0B" />
       </div>
 
       {/* Recent courses */}
