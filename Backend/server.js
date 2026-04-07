@@ -17,6 +17,7 @@ const startServer = async () => {
   const userRoutes = (await import('./routes/UserRoutes.js')).default;
   const userDashboardRoutes = (await import('./routes/UserDashboardRoutes.js')).default;
   const uploadRoutes = (await import('./routes/UploadRoutes.js')).default;
+  const mediaRoutes = (await import('./routes/MediaRoutes.js')).default;
   
   // Load passport configuration conditionally
   // Use a try-catch block since we're importing conditionally
@@ -93,6 +94,7 @@ const startServer = async () => {
   app.use('/api/user', userDashboardRoutes);
   app.use('/api/upload', uploadRoutes);
   app.use('/api/admin', AdminRoutes);
+  app.use('/api/media', mediaRoutes);
 
   // Public music notes endpoint for frontend
   app.get('/api/music-notes', getAllMusicNotes);

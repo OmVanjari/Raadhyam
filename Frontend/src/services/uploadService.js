@@ -193,14 +193,23 @@ export const uploadFile = async (file, options = {}) => {
       throw new Error(response.data?.message || 'Upload failed');
     }
 
-    // Return standardized result
+    // Extract data from nested response structure
+    const uploadData = response.data.data || response.data;
+    
+    // Return standardized result that matches UploadBox expectations
     return {
       success: true,
-      url: response.data.data.url,
-      publicId: response.data.data.cloudinary?.public_id,
-      metadata: response.data.data.metadata,
-      cloudinary: response.data.data.cloudinary,
-      uploadedAt: response.data.data.uploadedAt,
+      url: uploadData.url,
+      publicId: uploadData.cloudinary?.public_id,
+      metadata: {
+        ...uploadData.metadata,
+        category: uploadData.metadata?.category || 'other',
+        originalName: uploadData.metadata?.originalName || file.name,
+        size: uploadData.metadata?.size || file.size,
+        sizeFormatted: uploadData.metadata?.sizeFormatted || formatFileSize(file.size),
+      },
+      cloudinary: uploadData.cloudinary,
+      uploadedAt: uploadData.uploadedAt,
       // Preserve full response for debugging
       _rawResponse: response.data,
     };

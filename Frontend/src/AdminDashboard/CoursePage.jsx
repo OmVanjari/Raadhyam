@@ -52,7 +52,7 @@ const CoursesPage = ({
   }, []);
 
   const getAxiosConfig = () => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     return {
       headers: {
         'Authorization': token ? `Bearer ${token}` : '',

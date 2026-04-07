@@ -17,14 +17,32 @@ const UserCoursesPage = () => {
 
   useEffect(() => {
     fetchCourses();
+    fetchEnrolledCourses();
   }, []);
 
   const fetchCourses = () => {
     setLoading(true);
-    axios.get('/api/admin/courses')
-      .then(r => setCourses(r.data.courses || []))
+    // Use public courses endpoint which only shows published courses
+    axios.get('/api/courses')
+      .then(r => setCourses(r.data.data || []))
       .catch(() => setCourses([]))
       .finally(() => setLoading(false));
+  };
+
+  const fetchEnrolledCourses = () => {
+    axios.get('/api/user/courses', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    })
+      .then(r => {
+        if (r.data.success && r.data.data) {
+          const enrolledIds = new Set(r.data.data.map(course => course.courseId));
+          setEnrolledCourses(enrolledIds);
+        }
+      })
+      .catch(() => {
+        // If fetch fails, user might not be authenticated or has no enrollments
+        setEnrolledCourses(new Set());
+      });
   };
 
   const handleEnroll = async (courseId, courseTitle) => {
@@ -44,11 +62,20 @@ const UserCoursesPage = () => {
         });
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Failed to enroll. Please try again.';
-      setNotification({
-        type: 'error',
-        message: errorMessage
-      });
+      // Check if user is already enrolled (backend returns alreadyEnrolled: true)
+      if (error.response?.data?.alreadyEnrolled) {
+        setEnrolledCourses(prev => new Set([...prev, courseId]));
+        setNotification({
+          type: 'success',
+          message: `You are already enrolled in "${courseTitle}"`
+        });
+      } else {
+        const errorMessage = error.response?.data?.message || 'Failed to enroll. Please try again.';
+        setNotification({
+          type: 'error',
+          message: errorMessage
+        });
+      }
     } finally {
       setEnrollingId(null);
       // Clear notification after 3 seconds

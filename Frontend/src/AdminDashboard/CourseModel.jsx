@@ -74,7 +74,7 @@ const CourseFormModal = ({
 
   /* ── helpers ── */
   const getAxiosConfig = () => {
-    const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     return {
       headers: {
         Authorization: token ? `Bearer ${token}` : '',
@@ -131,7 +131,7 @@ const CourseFormModal = ({
         const formData = new FormData();
         formData.append('file', file);
         formData.append('type', path.includes('video') ? 'video' : 'image');
-        const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+        const token = localStorage.getItem('token');
         const res = await axios.post('/api/admin/upload', formData, {
           headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
         });

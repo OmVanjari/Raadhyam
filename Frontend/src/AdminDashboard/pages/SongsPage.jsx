@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Card, PageHeader, PrimaryBtn, OutlineBtn, Toolbar, Table, SkeletonRows, Pagination, Badge, RowActions, Cover, Modal, FormGrid, Input, Select, Textarea, UploadBox, FormActions, SANS, TEXT, MUTED, BORDER, Y, YL } from '../components/UI';
 
 const HEADERS = ['Song','Artist','Album','Genre','Duration','Status','Actions'];
@@ -7,7 +8,7 @@ const HEADERS = ['Song','Artist','Album','Genre','Duration','Status','Actions'];
  * SongForm Component
  * Handles song creation/editing with integrated upload functionality
  */
-const SongForm = ({ title, onClose, existingSong = null }) => {
+const SongForm = ({ title, onClose, existingSong = null, onSongSaved }) => {
   // Form state
   const [formData, setFormData] = useState({
     title: existingSong?.title || '',
@@ -23,15 +24,21 @@ const SongForm = ({ title, onClose, existingSong = null }) => {
 
   // Upload state - stores the uploaded file URLs
   const [audioFile, setAudioFile] = useState(
-    existingSong?.audioUrl ? { url: existingSong.audioUrl, metadata: { originalName: existingSong.audioFileName } } : null
+    existingSong?.fileUrl ? { url: existingSong.fileUrl, metadata: { originalName: existingSong.audioFileName || 'audio' } } : null
   );
   const [coverImage, setCoverImage] = useState(
-    existingSong?.coverUrl ? { url: existingSong.coverUrl, metadata: { originalName: existingSong.coverFileName, category: 'image' } } : null
+    existingSong?.thumbnailUrl ? { url: existingSong.thumbnailUrl, metadata: { originalName: existingSong.coverFileName || 'cover', category: 'image' } } : null
   );
 
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+
+  // Get auth token for API calls
+  const getAuthToken = () => {
+    const token = localStorage.getItem('token');
+    return token ? `Bearer ${token}` : '';
+  };
 
   // Handle form input changes
   const handleInputChange = (field, value) => {
@@ -83,47 +90,47 @@ const SongForm = ({ title, onClose, existingSong = null }) => {
 
     try {
       // Prepare data for API call to /api/music
+      // Backend expects: title, artist, fileUrl (required), duration, publicId, thumbnailUrl, album, genre
       const songData = {
         title: formData.title,
         artist: formData.artist,
         album: formData.album,
         genre: formData.genre,
         duration: formData.duration,
+        // Backend expects 'fileUrl' not 'audioUrl'
+        fileUrl: audioFile.url,
+        publicId: audioFile.metadata?.public_id || null,
+        thumbnailUrl: coverImage?.url || null,
+        // Additional metadata for frontend display
         language: formData.language,
         status: formData.status,
         releaseDate: formData.releaseDate,
         description: formData.description,
-        // Use the uploaded Cloudinary URLs
-        audioUrl: audioFile.url,
-        audioMetadata: audioFile.metadata,
-        coverUrl: coverImage?.url,
-        coverMetadata: coverImage?.metadata,
       };
 
-      // Get auth token
-      const token = localStorage.getItem('token');
-
-      // Make API call
-      const response = await fetch('http://localhost:5000/api/music', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify(songData),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to save song');
+      // Use axios for API call with proper auth
+      const token = getAuthToken();
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = token;
       }
 
-      // Success - close modal
-      console.log('Song saved successfully:', result);
-      onClose();
+      const response = await axios.post('/api/music', songData, { headers });
+
+      if (response.data && response.data.success) {
+        console.log('Song saved successfully:', response.data);
+        // Notify parent component of successful save
+        if (onSongSaved) {
+          onSongSaved(response.data);
+        }
+        onClose();
+      } else {
+        throw new Error(response.data?.message || 'Failed to save song');
+      }
     } catch (error) {
-      setSubmitError(error.message || 'Failed to save song');
+      setSubmitError(error.response?.data?.message || error.message || 'Failed to save song');
     } finally {
       setIsSubmitting(false);
     }
@@ -244,30 +251,83 @@ const SongForm = ({ title, onClose, existingSong = null }) => {
 const SongsPage = () => {
   const [modal, setModal] = useState(null); // null | 'add' | 'edit' | 'view'
   const [selectedSong, setSelectedSong] = useState(null);
+  const [songs, setSongs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const rows = Array.from({length:5}).map((_,i) => [
+  // Fetch songs from backend
+  const fetchSongs = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await axios.get('/api/music', { headers });
+      
+      if (response.data && response.data.success) {
+        setSongs(response.data.songs || response.data.data || []);
+      } else {
+        setSongs([]);
+      }
+    } catch (err) {
+      console.error('Error fetching songs:', err);
+      setError(err.response?.data?.message || 'Failed to load songs');
+      setSongs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load songs on mount
+  useEffect(() => {
+    fetchSongs();
+  }, []);
+
+  // Handler for when a song is saved
+  const handleSongSaved = () => {
+    fetchSongs(); // Refresh the list
+  };
+
+  // Generate table rows from songs data
+  const rows = songs.map((song) => [
     <div style={{ display:'flex', alignItems:'center', gap:9 }}>
       <Cover size={34} />
       <div>
-        <div style={{ width:100, height:11, background:'#F3F4F6', borderRadius:4, marginBottom:4 }} />
-        <div style={{ width:70,  height:10, background:'#F3F4F6', borderRadius:4 }} />
+        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: TEXT }}>{song.title || 'Untitled'}</div>
+        <div style={{ fontSize: '0.72rem', color: MUTED }}>{song.artist || 'Unknown Artist'}</div>
       </div>
     </div>,
-    <div style={{ width:80, height:11, background:'#F3F4F6', borderRadius:4 }} />,
-    <div style={{ width:90, height:11, background:'#F3F4F6', borderRadius:4 }} />,
-    <div style={{ width:60, height:11, background:'#F3F4F6', borderRadius:4 }} />,
-    <div style={{ width:40, height:11, background:'#F3F4F6', borderRadius:4 }} />,
-    <Badge status={i%3===2?'Inactive':i%3===1?'Draft':'Active'} />,
-    <RowActions active={i%3!==2} onEdit={() => {
-      setSelectedSong({ id: i, title: 'Sample Song' }); // Would fetch real data
-      setModal('edit');
-    }} />,
+    <div style={{ fontSize: '0.82rem', color: TEXT }}>{song.artist || 'Unknown'}</div>,
+    <div style={{ fontSize: '0.82rem', color: TEXT }}>{song.album || '—'}</div>,
+    <Badge status={song.genre || 'Unknown'} />,
+    <div style={{ fontSize: '0.82rem', color: TEXT }}>{song.duration || '—'}</div>,
+    <Badge status={song.status || 'Active'} />,
+    <RowActions 
+      active={song.status !== 'Inactive'} 
+      onEdit={() => {
+        setSelectedSong(song);
+        setModal('edit');
+      }} 
+    />,
   ]);
+
+  if (loading && songs.length === 0) {
+    return (
+      <div style={{ fontFamily: SANS, display: 'flex', justifyContent: 'center', padding: '3rem' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: 40, height: 40, border: '3px solid #E5E7EB', borderTop: `3px solid ${Y}`, borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 1rem' }} />
+          <p style={{ color: MUTED, fontSize: '0.85rem' }}>Loading songs...</p>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   return (
     <div style={{ fontFamily:SANS }}>
-      {modal==='add'  && <SongForm title="Add New Song"  onClose={() => { setModal(null); setSelectedSong(null); }} />}
-      {modal==='edit' && <SongForm title="Edit Song"     onClose={() => { setModal(null); setSelectedSong(null); }} existingSong={selectedSong} />}
+      {modal==='add'  && <SongForm title="Add New Song"  onClose={() => { setModal(null); setSelectedSong(null); }} onSongSaved={handleSongSaved} />}
+      {modal==='edit' && <SongForm title="Edit Song"     onClose={() => { setModal(null); setSelectedSong(null); }} existingSong={selectedSong} onSongSaved={handleSongSaved} />}
 
       <PageHeader title="Songs" subtitle="Manage all songs"
         actions={[
@@ -275,14 +335,28 @@ const SongsPage = () => {
           <PrimaryBtn key="add" icon={PlusIcon} onClick={() => setModal('add')}>Add Song</PrimaryBtn>,
         ]} />
 
+      {error && (
+        <Card style={{ marginBottom: '1rem', padding: '1rem', background: '#FEF2F2', border: '1px solid #FCA5A5' }}>
+          <p style={{ color: '#EF4444', fontSize: '0.85rem', margin: 0 }}>{error}</p>
+        </Card>
+      )}
+      
       <Card noPad>
         <Toolbar
           searchPlaceholder="Search by title, artist, album..."
           filters={['Active','Inactive','Draft']}
           sortOptions={['Title A–Z','Title Z–A','Newest','Oldest','Most Played']}
         />
-        <Table headers={HEADERS} rows={rows} checkable />
-        <Pagination label="Showing 1–10 of 0 songs" />
+        {rows.length > 0 ? (
+          <>
+            <Table headers={HEADERS} rows={rows} checkable />
+            <Pagination label={`Showing 1–${Math.min(10, rows.length)} of ${rows.length} songs`} />
+          </>
+        ) : (
+          <div style={{ padding: '3rem', textAlign: 'center', color: MUTED }}>
+            <p style={{ fontSize: '0.9rem' }}>No songs found. Click "Add Song" to create one.</p>
+          </div>
+        )}
       </Card>
     </div>
   );

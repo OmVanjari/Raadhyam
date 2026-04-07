@@ -547,13 +547,18 @@ export const updateCourse = async (req, res) => {
 
         return processedModule;
       });
+    } else {
+      // Handle case where modules is not provided
+      updateData.modules = existingCourse.modules || [];
     }
 
-    const totalLessons = updateData.modules.reduce((total, module) => 
+    // Safely calculate total lessons and duration
+    const modules = updateData.modules || [];
+    const totalLessons = modules.reduce((total, module) => 
       total + (module.lessons?.length || 0), 0
     );
 
-    const totalDurationSeconds = updateData.modules.reduce((total, module) => {
+    const totalDurationSeconds = modules.reduce((total, module) => {
       return total + (module.lessons?.reduce((lessonTotal, lesson) => {
         if (lesson.duration) {
           const [minutes, seconds] = lesson.duration.split(':').map(Number);
@@ -622,7 +627,14 @@ export const getAllCoursesAdmin = async (req, res) => {
     }
 
     if (category) query.category = category;
-    if (status) query["publish.status"] = status;
+    
+    // Filter by publish status - default to 'published' to hide draft/archived courses
+    if (status) {
+      query["publish.status"] = status;
+    } else {
+      // Default to published courses only (hide draft and archived)
+      query["publish.status"] = 'published';
+    }
 
     const [courses, total] = await Promise.all([
       Course.find(query)

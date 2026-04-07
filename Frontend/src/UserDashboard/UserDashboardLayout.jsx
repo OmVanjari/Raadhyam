@@ -27,7 +27,7 @@ const UserDashboardLayout = ({ children, activeTab, setActiveTab }) => {
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
     localStorage.removeItem('userData');
     navigate('/login');
   };

@@ -25,8 +25,9 @@ const UserDashboardHome = ({ setActiveTab }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const coursesRes = await axios.get('/api/admin/courses');
-        setCourses(coursesRes.data.courses || []);
+        // Use public courses endpoint which only shows published courses
+        const coursesRes = await axios.get('/api/courses');
+        setCourses(coursesRes.data.data || []);
         
         const notesRes = await axios.get('/api/music-notes');
         const notesData = notesRes.data?.notes ?? notesRes.data ?? [];

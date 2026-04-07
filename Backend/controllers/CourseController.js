@@ -33,9 +33,13 @@ const buildCourseQuery = (query) => {
     filters.level = query.level;
   }
   
-  // Filter by publish status (default to published for public access)
+  // Filter by publish status - default to 'published' for public access
+  // Only show courses that are published (not draft or archived)
   if (query.status) {
     filters['publish.status'] = query.status;
+  } else {
+    // Default to published courses only for public endpoints
+    filters['publish.status'] = 'published';
   }
   
   // Filter by visibility
@@ -156,6 +160,14 @@ export const getCourseById = async (req, res) => {
     
     // Check if course exists
     if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: 'Course not found'
+      });
+    }
+    
+    // Check if course is published (don't show draft or archived courses to public)
+    if (course.publish?.status !== 'published') {
       return res.status(404).json({
         success: false,
         message: 'Course not found'
