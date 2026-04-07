@@ -73,7 +73,7 @@ const RegisterPage = () => {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); setIsLoading(false); return; }
     try {
-      const res = await axios.post('/api/register/user', {
+      const res = await axios.post('/api/auth/register', {
         name: formData.name.trim(),
         email: formData.email.toLowerCase().trim(),
         password: formData.password,

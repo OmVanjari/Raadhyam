@@ -10,7 +10,7 @@ axios.interceptors.response.use(
     ) {
 
       // Clear token from localStorage
-      localStorage.removeItem("authToken");
+      localStorage.removeItem("token");
 
       // Clear cookies
       document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";

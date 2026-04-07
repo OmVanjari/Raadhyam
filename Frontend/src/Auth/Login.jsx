@@ -25,17 +25,17 @@ const LoginPage = () => {
     generateCaptcha();
   }, []);
 
-  const checkAuthStatus = async () => {
+    const checkAuthStatus = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
       if (!token) { setIsCheckingAuth(false); return; }
-      const res = await axios.get('/api/check-auth', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get('/api/auth/check-auth', { headers: { Authorization: `Bearer ${token}` } });
       if (res.data.authenticated) {
         window.location.href = res.data.user?.role === 'admin' ? '/dashboard/admin' : '/dashboard/home';
         return;
       }
-      localStorage.removeItem('authToken');
-    } catch { localStorage.removeItem('authToken'); }
+      localStorage.removeItem('token');
+    } catch { localStorage.removeItem('token'); }
     finally { setIsCheckingAuth(false); }
   };
 
@@ -45,7 +45,7 @@ const LoginPage = () => {
     if (token && userData) {
       try {
         const user = JSON.parse(decodeURIComponent(userData));
-        localStorage.setItem('authToken', token);
+        localStorage.setItem('token', token);
         localStorage.setItem('userData', JSON.stringify(user));
         window.history.replaceState({}, '', window.location.pathname);
         window.location.href = user.role === 'admin' ? '/dashboard/admin' : '/dashboard/home';
@@ -60,7 +60,7 @@ const LoginPage = () => {
     if (token && userData) {
       try {
         const user = JSON.parse(decodeURIComponent(userData));
-        localStorage.setItem('authToken', token);
+        localStorage.setItem('token', token);
         localStorage.setItem('userData', JSON.stringify(user));
         window.history.replaceState({}, '', window.location.pathname);
         window.location.href = user.role === 'admin' ? '/dashboard/admin' : '/dashboard/home';
@@ -122,10 +122,10 @@ const LoginPage = () => {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); setIsLoading(false); return; }
     try {
-      const res = await axios.post('/api/login/user', { email: formData.email.toLowerCase().trim(), password: formData.password });
+      const res = await axios.post('/api/auth/login', { email: formData.email.toLowerCase().trim(), password: formData.password });
       if (res.data.success) {
         setSuccessMessage('Login successful! Redirecting...');
-        if (res.data.token) localStorage.setItem('authToken', res.data.token);
+        if (res.data.token) localStorage.setItem('token', res.data.token);
         if (res.data.user)  localStorage.setItem('userData', JSON.stringify(res.data.user));
         setTimeout(() => { window.location.href = res.data.user?.role === 'admin' ? '/dashboard/admin' : '/dashboard/home'; }, 1200);
       }
