@@ -159,11 +159,21 @@ const validateUpdateCourse = [
 
 /**
  * Validation result handler - checks for validation errors
+ * Returns standardized error format with field-level details
  */
-const validate = (req, res, next) => {
+export const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(400).json({ 
+      success: false,
+      message: 'Validation failed',
+      code: 'VALIDATION_ERROR',
+      errors: errors.array().map(err => ({
+        field: err.path,
+        message: err.msg,
+        value: err.value
+      }))
+    });
   }
   next();
 };
@@ -251,14 +261,6 @@ const validateMusicId = [
 
 export const validateMusic = [...validateCreateMusic, validate];
 export const validateMusicById = [...validateMusicId, validate];
-
-export {
-  validateCreateCourse,
-  validateUpdateCourse,
-  validateCreateMusic,
-  validateMusicId,
-  validate
-};
 
 // =====================================================
 // USER DASHBOARD VALIDATION RULES

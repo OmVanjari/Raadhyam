@@ -22,12 +22,12 @@
 import express from 'express';
 import { body, param, validationResult } from 'express-validator';
 import verifyToken from '../middlewares/AuthmiddleWare.js';
-import { getUserCourses, createNote, getNoteById } from '../controllers/UserDashboardController.js';
+import { getUserCourses, enrollInCourse, createNote, getNoteById } from '../controllers/UserDashboardController.js';
 
 const router = express.Router();
 
 /**
- * Validation error handler middleware
+ * Validation error handler middleware - standardized format
  */
 const validate = (req, res, next) => {
   const errors = validationResult(req);
@@ -35,7 +35,12 @@ const validate = (req, res, next) => {
     return res.status(400).json({ 
       success: false,
       message: 'Validation failed',
-      errors: errors.array() 
+      code: 'VALIDATION_ERROR',
+      errors: errors.array().map(err => ({
+        field: err.path,
+        message: err.msg,
+        value: err.value
+      }))
     });
   }
   next();
@@ -82,9 +87,28 @@ const validateNoteId = [
   validate
 ];
 
+/**
+ * Validation rules for enrolling in a course
+ */
+const validateEnroll = [
+  body('courseId')
+    .trim()
+    .notEmpty()
+    .withMessage('Course ID is required')
+    .isMongoId()
+    .withMessage('Invalid course ID format'),
+  
+  validate
+];
+
 // GET /api/user/courses - Get user's enrolled courses (requires auth)
 // Returns courses where the authenticated user has an active enrollment
 router.get('/courses', verifyToken, getUserCourses);
+
+// POST /api/user/enroll - Enroll in a course (requires auth + validation)
+// Body: courseId (required)
+// Creates a new enrollment or reactivates existing one
+router.post('/enroll', verifyToken, validateEnroll, enrollInCourse);
 
 // POST /api/user/notes - Create user note (requires auth + validation)
 // Body: courseId (required), content (required), title (optional)

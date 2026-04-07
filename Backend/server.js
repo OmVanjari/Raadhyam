@@ -1,17 +1,17 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-//test123
+
 // Load environment variables FIRST
 dotenv.config({ path: './.env' });
 
 // Now import and initialize modules that depend on env vars
-// Use a wrapper to ensure dotenv is loaded first
 const startServer = async () => {
   // Import modules after dotenv loads
   const { default: connectDB } = await import('./config/DB.js');
   const { default: AdminRoutes } = await import('./routes/AdminRoutes.js');
   const { getAllMusicNotes } = await import('./controllers/AdminController.js');
+  const { globalErrorHandler, notFoundHandler } = await import('./middlewares/errorHandler.js');
   const musicRoutes = (await import('./routes/MusicRoute.js')).default;
   const courseRoutes = (await import('./routes/CourseRoutes.js')).default;
   const userRoutes = (await import('./routes/UserRoutes.js')).default;
@@ -97,27 +97,11 @@ const startServer = async () => {
   // Public music notes endpoint for frontend
   app.get('/api/music-notes', getAllMusicNotes);
 
-  // 404 handler for unknown routes
-  app.use((req, res) => {
-    res.status(404).json({
-      success: false,
-      message: `Route ${req.method} ${req.originalUrl} not found`
-    });
-  });
+  // 404 handler for unknown routes (must be before error handler)
+  app.use(notFoundHandler);
 
-  // Global error handler
-  app.use((err, req, res, next) => {
-    console.error('Error:', err);
-    
-    const statusCode = err.statusCode || 500;
-    const message = err.message || 'Internal server error';
-    
-    res.status(statusCode).json({
-      success: false,
-      message,
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-    });
-  });
+  // Global error handler (must be last)
+  app.use(globalErrorHandler);
 
   // Database connection and server start
   await connectDB();

@@ -10,7 +10,11 @@ const protect = async (req, res, next) => {
       (req.cookies && req.cookies.auth_token);
 
     if (!token) {
-      return res.status(401).json({ message: "Not authenticated" });
+      return res.status(401).json({ 
+        success: false, 
+        message: "Not authenticated", 
+        code: "AUTH_REQUIRED" 
+      });
     }
 
     // ✅ Remove Bearer prefix if present
@@ -22,13 +26,19 @@ const protect = async (req, res, next) => {
 
     const user = await User.findById(decoded.userId);
     if (!user) {
-      return res.status(401).json({ message: "User not found" });
+      return res.status(401).json({ 
+        success: false, 
+        message: "User not found", 
+        code: "AUTH_REQUIRED" 
+      });
     }
 
     // ✅ Single-session security check
     if (user.currentToken !== token) {
       return res.status(401).json({
+        success: false,
         message: "Another device logged in, session expired",
+        code: "SESSION_EXPIRED"
       });
     }
 
@@ -37,7 +47,9 @@ const protect = async (req, res, next) => {
 
   } catch (err) {
     return res.status(401).json({
+      success: false,
       message: "Invalid or expired token",
+      code: err.name === 'TokenExpiredError' ? "TOKEN_EXPIRED" : "INVALID_TOKEN"
     });
   }
 };
@@ -48,7 +60,9 @@ const authorizeAdmin = (req, res, next) => {
     next();
   } else {
     return res.status(403).json({ 
-      message: "You are not authorized to perform this action" 
+      success: false,
+      message: "You are not authorized to perform this action",
+      code: "FORBIDDEN"
     });
   }
 };

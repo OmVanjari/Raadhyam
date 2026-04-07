@@ -13,13 +13,18 @@ export const getAllMusicNotes = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      message: 'Music notes retrieved successfully',
       count: notes.length,
       data: notes
     });
 
   } catch (error) {
     console.error("Get MusicNotes Error:", error);
-    res.status(500).json({ message: "Failed to fetch music notes" });
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to fetch music notes",
+      code: "INTERNAL_ERROR"
+    });
   }
 };
 
@@ -34,11 +39,19 @@ export const createMusicNote = async (req, res) => {
     } = req.body;
 
     if (!title || !category) {
-      return res.status(400).json({ message: "Title and category are required" });
+      return res.status(400).json({ 
+        success: false,
+        message: "Title and category are required",
+        code: "VALIDATION_ERROR"
+      });
     }
 
     if (!sections || !Array.isArray(sections) || sections.length === 0) {
-      return res.status(400).json({ message: "At least one section is required" });
+      return res.status(400).json({ 
+        success: false,
+        message: "At least one section is required",
+        code: "VALIDATION_ERROR"
+      });
     }
 
     const musicNote = await MusicNote.create({
@@ -57,7 +70,11 @@ export const createMusicNote = async (req, res) => {
 
   } catch (error) {
     console.error("Create MusicNote Error:", error);
-    res.status(500).json({ message: "Failed to create music note" });
+    res.status(500).json({ 
+      success: false,
+      message: "Failed to create music note",
+      code: "INTERNAL_ERROR"
+    });
   }
 };
 

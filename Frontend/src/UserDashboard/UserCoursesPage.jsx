@@ -11,13 +11,50 @@ const UserCoursesPage = () => {
   const [courses, setCourses] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [enrollingId, setEnrollingId] = useState(null);
+  const [enrolledCourses, setEnrolledCourses] = useState(new Set());
+  const [notification, setNotification] = useState(null);
 
   useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = () => {
+    setLoading(true);
     axios.get('/api/admin/courses')
       .then(r => setCourses(r.data.courses || []))
       .catch(() => setCourses([]))
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  const handleEnroll = async (courseId, courseTitle) => {
+    setEnrollingId(courseId);
+    
+    try {
+      const response = await axios.post('/api/user/enroll', 
+        { courseId },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      
+      if (response.data.success) {
+        setEnrolledCourses(prev => new Set([...prev, courseId]));
+        setNotification({
+          type: 'success',
+          message: `Successfully enrolled in "${courseTitle}"!`
+        });
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Failed to enroll. Please try again.';
+      setNotification({
+        type: 'error',
+        message: errorMessage
+      });
+    } finally {
+      setEnrollingId(null);
+      // Clear notification after 3 seconds
+      setTimeout(() => setNotification(null), 3000);
+    }
+  };
 
   const filtered = courses.filter(c =>
     c.title?.toLowerCase().includes(search.toLowerCase()) ||
@@ -26,6 +63,28 @@ const UserCoursesPage = () => {
 
   return (
     <div>
+      {/* Notification Toast */}
+      {notification && (
+        <div style={{
+          position: 'fixed',
+          top: 20,
+          right: 20,
+          padding: '14px 20px',
+          borderRadius: 10,
+          background: notification.type === 'success' ? '#10B981' : '#EF4444',
+          color: '#fff',
+          fontFamily: SANS,
+          fontSize: '0.9rem',
+          fontWeight: 500,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+          zIndex: 9999,
+          animation: 'slideIn 0.3s ease-out',
+          maxWidth: 320
+        }}>
+          {notification.type === 'success' ? '✓ ' : '✕ '}{notification.message}
+        </div>
+      )}
+
       <div style={{ marginBottom:'1.75rem' }}>
         <h1 style={{ fontFamily:SERIF, fontSize:'2rem', fontWeight:700, color:SLATE, marginBottom:6 }}>My Courses</h1>
         <p style={{ color:MUTED, fontSize:'0.9rem', fontFamily:SANS }}>Browse all available music courses</p>
@@ -58,7 +117,39 @@ const UserCoursesPage = () => {
                 <p style={{ color:MUTED, fontSize:'0.82rem', lineHeight:1.6, fontFamily:SANS, marginBottom:'1rem', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{c.description}</p>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                   <span style={{ fontSize:'0.78rem', color:MUTED, fontFamily:SANS }}>🕐 {c.duration || 'Self-paced'}</span>
-                  <button style={{ background:`linear-gradient(135deg,${AMBER},#B45309)`, color:'#fff', border:'none', borderRadius:8, padding:'7px 16px', fontSize:'0.78rem', fontWeight:700, cursor:'pointer', fontFamily:SANS }}>Enroll Now</button>
+                  {enrolledCourses.has(c._id) ? (
+                    <span style={{ 
+                      background: '#10B981', 
+                      color: '#fff', 
+                      border:'none', 
+                      borderRadius:8, 
+                      padding:'7px 16px', 
+                      fontSize:'0.78rem', 
+                      fontWeight:700, 
+                      fontFamily:SANS 
+                    }}>✓ Enrolled</span>
+                  ) : (
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEnroll(c._id, c.title);
+                      }}
+                      disabled={enrollingId === c._id}
+                      style={{ 
+                        background: enrollingId === c._id ? '#94A3B8' : `linear-gradient(135deg,${AMBER},#B45309)`,
+                        color:'#fff', 
+                        border:'none', 
+                        borderRadius:8, 
+                        padding:'7px 16px', 
+                        fontSize:'0.78rem', 
+                        fontWeight:700, 
+                        cursor: enrollingId === c._id ? 'not-allowed' : 'pointer',
+                        fontFamily:SANS 
+                      }}
+                    >
+                      {enrollingId === c._id ? 'Enrolling...' : 'Enroll Now'}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
