@@ -112,7 +112,7 @@ const RegisterPage = () => {
   };
 
   return (
-    <div style={{ height: '100vh', background: 'linear-gradient(130deg, #ef7e1a 0%, #f4a14f 100%)', fontFamily: SANS, position: 'relative', overflow: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(130deg, #ef7e1a 0%, #f4a14f 100%)', fontFamily: SANS, position: 'relative', overflow: 'hidden' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Lato:wght@400;600;700&display=swap');
         @keyframes fadeUp    { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
@@ -125,11 +125,11 @@ const RegisterPage = () => {
         @keyframes imgReveal { from{opacity:0;transform:scale(1.08)} to{opacity:1;transform:scale(1)} }
         @keyframes pulseBtn  { 0%,100%{box-shadow:0 4px 18px rgba(239,180,0,0.4)} 50%{box-shadow:0 4px 32px rgba(239,180,0,0.75)} }
 
-        .auth-wrap { height:100vh; padding:22px 18px; display:flex; align-items:center; justify-content:center; }
+        .auth-wrap { min-height:100vh; padding:22px 18px; display:flex; align-items:center; justify-content:center; }
 
         .auth-card {
           width: min(1060px, 100%);
-          height: min(90vh, 650px);
+          height: min(92vh, 680px);
           border-radius: 20px;
           background: #f6f7fb;
           box-shadow: 0 32px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.15);
@@ -149,6 +149,8 @@ const RegisterPage = () => {
         .auth-right-overlay { position:absolute; inset:0; background:linear-gradient(135deg,rgba(239,126,26,0.18) 0%,transparent 60%); pointer-events:none; }
 
         .auth-input::placeholder { color:#b2b8c2; }
+        .auth-left-inner::-webkit-scrollbar { width:3px; }
+        .auth-left-inner::-webkit-scrollbar-thumb { background:rgba(217,119,6,0.3); border-radius:3px; }
 
         .auth-field { animation: fadeUp 0.5s ease both; }
         .auth-field:nth-child(1){ animation-delay:.2s }
@@ -163,15 +165,17 @@ const RegisterPage = () => {
 
         .note-float { position:absolute; pointer-events:none; user-select:none; color:rgba(255,255,255,0.22); font-size:1.8rem; animation:floatNote 7s ease-in-out infinite; }
 
-        @media(max-width:980px){
-          .auth-card{ grid-template-columns:1fr; max-width:520px; height:min(92vh,760px); }
-          .auth-right{ min-height:220px; order:-1; }
-          .auth-right img{ object-position:center 22%; }
-        }
-        @media(max-width:640px){
-          .auth-wrap{ padding-top:12px; }
-          .auth-left-inner{ padding:20px 18px !important; }
+        @media(max-width:768px){
+          .auth-wrap{ padding:16px; align-items:flex-start; padding-top:60px; }
+          .auth-card{ grid-template-columns:1fr; height:auto; min-height:unset; max-width:440px; border-radius:16px; }
+          .auth-right{ display:none !important; }
+          .auth-left-inner{ padding:28px 22px 24px !important; }
           .register-password-grid{ grid-template-columns:1fr !important; }
+        }
+        @media(max-width:420px){
+          .auth-wrap{ padding:12px; padding-top:52px; }
+          .auth-left-inner{ padding:22px 16px 20px !important; }
+          .auth-card{ border-radius:14px; }
         }
       `}</style>
 
@@ -209,7 +213,7 @@ const RegisterPage = () => {
           <span className="auth-dot top" />
           <span className="auth-dot bottom" />
 
-          <div className="auth-left-inner" style={{ padding: '24px 34px 18px', overflow: 'hidden' }}>
+          <div className="auth-left-inner" style={{ padding: '24px 34px 18px', overflowY: 'auto', overflowX: 'hidden' }}>
             <div className="auth-heading" style={{ marginBottom: '0.7rem' }}>
               <h1 style={{ fontFamily: SERIF, fontSize: '2.05rem', color: '#151821', marginBottom: 6, lineHeight: 1.1 }}>
                 Welcome to the world
