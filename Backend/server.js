@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import seedAdmin from './seedAdmin.js';
 
 dotenv.config({ path: './.env' });
 const startServer = async () => {
@@ -92,6 +93,9 @@ const startServer = async () => {
   app.use(globalErrorHandler);
 
   await connectDB();
+  
+  // Seed admin user if not exists
+  await seedAdmin();
   
   app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
