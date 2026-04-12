@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Music, X, Play, Share2, BookOpen, Clock, User } from 'lucide-react';
 import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
 import NavBarPage from './NavBarpage';
 import FooterPage from './FooterPage';
 
@@ -14,9 +13,6 @@ const MusicNotesPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedNote, setSelectedNote] = useState(null);
   const [showModal, setShowModal] = useState(false);
-
-  const { noteId } = useParams();
-  const navigate = useNavigate();
 
   const categories = [
     'all',
@@ -36,16 +32,6 @@ const MusicNotesPage = () => {
   useEffect(() => {
     filterNotes();
   }, [musicNotes, searchTerm, selectedCategory]);
-
-  useEffect(() => {
-    if (noteId && musicNotes.length > 0) {
-      const note = musicNotes.find(note => note._id === noteId);
-      if (note) {
-        setSelectedNote(note);
-        setShowModal(true);
-      }
-    }
-  }, [noteId, musicNotes]);
 
   const fetchMusicNotes = async () => {
     try {
@@ -87,14 +73,25 @@ const MusicNotesPage = () => {
   const openNoteModal = (note) => {
     setSelectedNote(note);
     setShowModal(true);
-    navigate(`/music-notes/${note._id}`);
+    window.history.pushState({ noteModal: true }, '');
   };
 
   const closeNoteModal = () => {
     setSelectedNote(null);
     setShowModal(false);
-    navigate('/Notes');
   };
+
+  // Handle browser back button — close modal instead of leaving page
+  useEffect(() => {
+    const handlePopState = () => {
+      if (showModal) {
+        setSelectedNote(null);
+        setShowModal(false);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [showModal]);
 
   const shareNote = (note) => {
     const shareUrl = `${window.location.origin}/music-notes/${note._id}`;

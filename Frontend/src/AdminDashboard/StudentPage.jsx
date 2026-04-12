@@ -1,486 +1,360 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { 
-  Users, 
-  Search, 
-  Filter, 
-  Mail, 
-  Phone, 
-  Calendar, 
-  BookOpen,
-  Award,
-  TrendingUp,
-  Eye,
-  UserCheck,
-  UserX,
-  Clock,
-  Star,
-  Activity,
-  Sparkles,
-  GraduationCap,
-  Target,
-  Zap,
-  RefreshCw,
-  AlertCircle,
-  EyeOff
+import {
+  Users, Search, Mail, Phone, Calendar, BookOpen,
+  TrendingUp, UserCheck, UserX, Clock, RefreshCw,
+  AlertCircle, ArrowLeft, CheckCircle, Shield, User,
+  GraduationCap, Target, Filter
 } from 'lucide-react';
 
-const StudentsPage = () => {
-  const [students, setStudents] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [isVisible, setIsVisible] = useState(false);
-  const [hoveredCard, setHoveredCard] = useState(null);
+/* ── Student Detail ─────────────────────────────────────────────── */
+const StudentDetailPanel = ({ studentId, onBack }) => {
+  const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    setIsVisible(true);
-    fetchStudents();
-  }, []);
-
-  const getAxiosConfig = () => {
     const token = localStorage.getItem('token');
-    return {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json'
-      }
-    };
-  };
+    axios.get(`/api/admin/users/${studentId}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => setStudent(r.data.user || r.data.data || r.data))
+      .catch(() => setError('Failed to load student details.'))
+      .finally(() => setLoading(false));
+  }, [studentId]);
+
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (error) return (
+    <div className="text-center py-16">
+      <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
+      <p className="text-gray-600 mb-4 text-sm">{error}</p>
+      <button onClick={onBack} className="bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-amber-600 transition-colors">← Back</button>
+    </div>
+  );
+
+  if (!student) return null;
+
+  const initials = (() => {
+    const n = student.name || student.username || student.email || 'U';
+    const parts = n.split(' ');
+    return parts.length >= 2 ? (parts[0][0]+parts[1][0]).toUpperCase() : n.substring(0,2).toUpperCase();
+  })();
+
+  const isActive = student.status !== 'Deleted' && student.status !== 'Inactive';
+  const progress        = student.progress        || 0;
+  const enrolledCount   = student.enrolledCourses  || 0;
+  const completedCount  = student.completedCourses || 0;
+  const completedLessons = student.completedLessons || 0;
+  const totalLessons    = student.totalLessons     || 0;
+
+  return (
+    <div className="space-y-5">
+      {/* Back */}
+      <div className="flex items-center gap-3">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors">
+          <ArrowLeft size={15} /> Back to Students
+        </button>
+        <span className="text-gray-300">/</span>
+        <span className="text-sm font-semibold text-gray-800">{student.name || 'Student'}</span>
+      </div>
+
+      {/* Profile */}
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="h-16 bg-amber-500" />
+        <div className="px-5 pb-5">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 -mt-8 mb-4">
+            <div className="flex items-end gap-3">
+              <div className="w-16 h-16 bg-white border-4 border-white rounded-xl shadow flex items-center justify-center bg-amber-100">
+                <span className="text-amber-700 font-bold text-xl">{initials}</span>
+              </div>
+              <div className="mb-1">
+                <h2 className="text-lg font-bold text-gray-900">{student.name || student.username || 'Student'}</h2>
+                <p className="text-sm text-gray-500">{student.email}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold border ${isActive ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+                {isActive ? <UserCheck size={12}/> : <UserX size={12}/>}
+                {student.status || (isActive ? 'Active' : 'Inactive')}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                <Shield size={12}/> {student.role || 'Student'}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[
+              { icon: Mail,     label:'Email',      value: student.email },
+              { icon: Phone,    label:'Phone',      value: student.phone },
+              { icon: Calendar, label:'Joined',     value: student.createdAt ? new Date(student.createdAt).toLocaleDateString('en-IN',{year:'numeric',month:'short',day:'numeric'}) : null },
+              { icon: Clock,    label:'Last Login', value: student.lastLogin ? new Date(student.lastLogin).toLocaleDateString('en-IN',{year:'numeric',month:'short',day:'numeric'}) : null },
+              { icon: User,     label:'Username',   value: student.username },
+              { icon: Target,   label:'Country',    value: student.country },
+            ].filter(row => row.value).map((row, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <row.icon size={14} className="text-gray-400 flex-shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-xs text-gray-400">{row.label}</div>
+                  <div className="text-sm font-medium text-gray-800 truncate">{row.value}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Stats — only show if there's enrollment data */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { label:'Enrolled',  value: enrolledCount,   show: true,                    color:'text-blue-600',  bg:'bg-blue-50' },
+          { label:'Completed', value: completedCount,  show: true,                    color:'text-green-600', bg:'bg-green-50' },
+          { label:'Progress',  value: `${progress}%`,  show: enrolledCount > 0,       color:'text-amber-600', bg:'bg-amber-50' },
+          { label:'Rating',    value: student.rating,  show: !!student.rating,        color:'text-purple-600',bg:'bg-purple-50' },
+        ].filter(s => s.show).map((s,i) => (
+          <div key={i} className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className={`text-xs font-medium ${s.color} ${s.bg} inline-block px-2 py-0.5 rounded mb-2`}>{s.label}</div>
+            <div className="text-2xl font-bold text-gray-900">{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Progress bar — only when enrolled */}
+      {enrolledCount > 0 && (
+      <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-semibold text-gray-700">Overall Progress</span>
+          <span className="text-sm font-bold text-amber-600">{progress}%</span>
+        </div>
+        <div className="w-full bg-gray-100 rounded-full h-2">
+          <div className="bg-amber-500 h-2 rounded-full transition-all duration-700" style={{ width:`${progress}%` }} />
+        </div>
+        <div className="flex justify-between text-xs text-gray-400 mt-1.5">
+          <span>{completedLessons} lessons completed</span>
+          <span>{totalLessons} total</span>
+        </div>
+      </div>
+      )}
+
+      {/* Enrolled courses */}
+      {student.coursesEnrolled?.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-gray-100">
+            <h4 className="font-semibold text-gray-800 text-sm flex items-center gap-2"><GraduationCap size={15} className="text-amber-500" /> Enrolled Courses</h4>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {student.coursesEnrolled.map((c, i) => (
+              <div key={i} className="px-5 py-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {c.thumbnailUrl
+                        ? <img src={c.thumbnailUrl} alt={c.title} className="w-9 h-9 object-cover rounded-lg" />
+                        : <span className="text-sm">🎵</span>}
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-gray-800">{c.title || `Course ${i+1}`}</div>
+                      <div className="text-xs text-gray-400">{c.category} · {c.enrolledAt ? new Date(c.enrolledAt).toLocaleDateString() : ''}</div>
+                    </div>
+                  </div>
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-md flex-shrink-0 ${c.completed ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                    {c.completed ? '✓ Done' : `${c.progress || 0}%`}
+                  </span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-1.5 ml-12">
+                  <div className="bg-amber-500 h-1.5 rounded-full" style={{ width:`${c.progress || 0}%` }} />
+                </div>
+                <div className="text-xs text-gray-400 mt-1 ml-12">{c.completedLessons || 0} / {c.totalLessons || 0} lessons</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ── Students List ──────────────────────────────────────────────── */
+const StudentsPage = ({ initialStudentId, onStudentOpened }) => {
+  const [students, setStudents]           = useState([]);
+  const [searchTerm, setSearchTerm]       = useState('');
+  const [statusFilter, setStatusFilter]   = useState('all');
+  const [loading, setLoading]             = useState(true);
+  const [error, setError]                 = useState(null);
+  const [selectedStudentId, setSelectedStudentId] = useState(initialStudentId || null);
+
+  // If navigated from dashboard with a pre-selected student
+  useEffect(() => {
+    if (initialStudentId) {
+      setSelectedStudentId(initialStudentId);
+      onStudentOpened?.();
+    }
+  }, [initialStudentId]);
+
+  useEffect(() => { fetchStudents(); }, []);
 
   const fetchStudents = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      const response = await axios.get('/api/admin/users', getAxiosConfig());
-      // Handle both array response and { data: [] } response
-      const usersData = Array.isArray(response.data) 
-        ? response.data 
-        : (response.data.users || response.data.data || []);
-      setStudents(usersData);
+      setLoading(true); setError(null);
+      const token = localStorage.getItem('token');
+      const res = await axios.get('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } });
+      const data = Array.isArray(res.data) ? res.data : (res.data.users || res.data.data || []);
+      setStudents(data);
     } catch (err) {
-      console.error('Error fetching students:', err);
       setError(err.response?.data?.message || 'Failed to load students');
-      setStudents([]);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
-  // Filter students based on search and status
-  const filteredStudents = students.filter(student => {
-    const studentName = student.name || student.username || '';
-    const studentEmail = student.email || '';
-    const matchesSearch = studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         studentEmail.toLowerCase().includes(searchTerm.toLowerCase());
-    const studentStatus = student.status || student.isActive ? 'active' : 'inactive';
-    const matchesStatus = statusFilter === 'all' || studentStatus === statusFilter;
-    return matchesSearch && matchesStatus;
+  const filtered = students.filter(s => {
+    const name  = (s.name || s.username || '').toLowerCase();
+    const email = (s.email || '').toLowerCase();
+    const term  = searchTerm.toLowerCase();
+    const matchSearch = name.includes(term) || email.includes(term);
+    const isActive = s.status !== 'Deleted' && s.status !== 'Inactive';
+    const matchStatus = statusFilter === 'all' || (statusFilter === 'active' ? isActive : !isActive);
+    return matchSearch && matchStatus;
   });
 
-  // Calculate stats from real data
   const stats = {
-    total: students.length,
-    active: students.filter(s => s.status !== 'Deleted' && s.status !== 'Inactive').length,
+    total:    students.length,
+    active:   students.filter(s => s.status !== 'Deleted' && s.status !== 'Inactive').length,
     inactive: students.filter(s => s.status === 'Deleted' || s.status === 'Inactive').length,
-    avgProgress: students.length > 0 ? Math.round(students.reduce((sum, s) => sum + (s.progress || 50), 0) / students.length) : 0
   };
 
-  const getStatusBadge = (student) => {
-    const status = student.status === 'Deleted' || student.status === 'Inactive' ? 'inactive' : 'active';
-    if (status === 'active') {
-      return (
-        <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/50 hover:scale-110 transition-transform duration-300">
-          <UserCheck size={14} className="mr-1" />
-          Active
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold bg-gradient-to-r from-gray-500 to-slate-500 text-white shadow-lg shadow-gray-500/50 hover:scale-110 transition-transform duration-300">
-        <UserX size={14} className="mr-1" />
-        Inactive
-      </span>
-    );
+  const getInitials = (s) => {
+    const n = s.name || s.username || s.email || 'U';
+    const p = n.split(' ');
+    return p.length >= 2 ? (p[0][0]+p[1][0]).toUpperCase() : n.substring(0,2).toUpperCase();
   };
 
-  const StatCard = ({ title, value, icon: Icon, color, bgColor, index }) => {
-    const [count, setCount] = useState(0);
+  if (loading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
-    useEffect(() => {
-      const duration = 2000;
-      const steps = 60;
-      const increment = value / steps;
-      let current = 0;
-      
-      const timer = setInterval(() => {
-        current += increment;
-        if (current >= value) {
-          setCount(value);
-          clearInterval(timer);
-        } else {
-          setCount(Math.floor(current));
-        }
-      }, duration / steps);
+  if (error) return (
+    <div className="text-center py-16">
+      <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
+      <p className="text-gray-600 mb-4 text-sm">{error}</p>
+      <button onClick={fetchStudents} className="bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-amber-600 transition-colors">Try Again</button>
+    </div>
+  );
 
-      return () => clearInterval(timer);
-    }, [value]);
-
-    return (
-      <div 
-        className={`group relative bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden ${
-          isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-        }`}
-        style={{ transitionDelay: `${index * 100}ms` }}
-      >
-        <div className={`absolute inset-0 ${bgColor} opacity-0 group-hover:opacity-10 transition-opacity duration-500`}></div>
-        <div className={`absolute top-0 right-0 w-40 h-40 ${bgColor} opacity-5 rounded-full blur-3xl group-hover:opacity-20 group-hover:scale-150 transition-all duration-700`}></div>
-        
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-        </div>
-        
-        <div className="relative">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">{title}</p>
-              <p className="text-4xl font-bold text-gray-900 tabular-nums">{count}{title.includes('Progress') ? '%' : ''}</p>
-            </div>
-            <div className={`relative p-4 rounded-2xl ${bgColor} ${color} shadow-lg group-hover:scale-110 group-hover:rotate-12 transition-all duration-500`}>
-              <Icon size={28} className="relative z-10" />
-              <div className={`absolute inset-0 ${bgColor} rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity`}></div>
-            </div>
-          </div>
-        </div>
-
-        <div className="absolute bottom-0 left-0 w-20 h-20 bg-gradient-to-tr from-gray-100/50 to-transparent rounded-tl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-      </div>
-    );
-  };
-
-  // Get avatar initials from name
-  const getAvatarInitials = (student) => {
-    const name = student.name || student.username || student.email || 'U';
-    if (name === 'U') return 'U';
-    const parts = name.split(' ');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  };
-
-  if (loading && students.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="relative">
-          <div className="w-16 h-16 border-4 border-amber-200 rounded-full animate-spin"></div>
-          <div className="w-16 h-16 border-t-4 border-amber-500 rounded-full animate-spin absolute top-0 left-0"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Users className="w-6 h-6 text-amber-600 animate-pulse" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error && students.length === 0) {
-    return (
-      <div className="text-center py-16">
-        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-        <h3 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Students</h3>
-        <p className="text-gray-600 mb-6">{error}</p>
-        <button
-          onClick={fetchStudents}
-          className="bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 font-bold shadow-lg"
-        >
-          Try Again
-        </button>
-      </div>
-    );
+  if (selectedStudentId) {
+    return <StudentDetailPanel studentId={selectedStudentId} onBack={() => setSelectedStudentId(null)} />;
   }
 
   return (
-    <div className="space-y-8">
-      {/* Animated Header */}
-      <div className={`transition-all duration-700 ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-8'
-      }`}>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-          <div>
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-amber-500 to-amber-700 bg-clip-text text-transparent flex items-center">
-              <Users className="mr-3 text-amber-600 animate-pulse" size={32} />
-              Students Management
-            </h2>
-            <p className="text-gray-600 mt-1 flex items-center">
-              <Sparkles size={16} className="mr-2 text-amber-500" />
-              Manage student enrollments and track progress
-            </p>
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Students</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{filtered.length} student{filtered.length !== 1 ? 's' : ''}</p>
+        </div>
+        <button onClick={fetchStudents} disabled={loading}
+          className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} /> Refresh
+        </button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label:'Total',    value: stats.total,    color:'text-blue-600',  bg:'bg-blue-50' },
+          { label:'Active',   value: stats.active,   color:'text-green-600', bg:'bg-green-50' },
+          { label:'Inactive', value: stats.inactive, color:'text-gray-600',  bg:'bg-gray-100' },
+        ].map((s,i) => (
+          <div key={i} className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className={`text-xs font-medium ${s.color} ${s.bg} inline-block px-2 py-0.5 rounded mb-2`}>{s.label}</div>
+            <div className="text-2xl font-bold text-gray-900">{s.value}</div>
           </div>
-          <button
-            onClick={fetchStudents}
-            disabled={loading}
-            className="px-5 py-2.5 border-2 border-amber-300 text-amber-700 rounded-xl hover:bg-amber-50 transition-all duration-300 flex items-center disabled:opacity-50 font-semibold"
-          >
-            <RefreshCw size={20} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
+        ))}
+      </div>
+
+      {/* Search */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+            <input type="text" placeholder="Search by name or email..." value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-amber-400 transition-colors" />
+          </div>
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-amber-400 bg-white">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Total Students"
-          value={stats.total}
-          icon={Users}
-          color="text-blue-600"
-          bgColor="bg-blue-500"
-          index={0}
-        />
-        <StatCard
-          title="Active Students"
-          value={stats.active}
-          icon={UserCheck}
-          color="text-green-600"
-          bgColor="bg-green-500"
-          index={1}
-        />
-        <StatCard
-          title="Inactive Students"
-          value={stats.inactive}
-          icon={UserX}
-          color="text-orange-600"
-          bgColor="bg-orange-500"
-          index={2}
-        />
-        <StatCard
-          title="Avg Progress"
-          value={stats.avgProgress}
-          icon={TrendingUp}
-          color="text-purple-600"
-          bgColor="bg-purple-500"
-          index={3}
-        />
-      </div>
-
-      {/* Search and Filter */}
-      <div className={`bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-500 ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-      }`} style={{ transitionDelay: '400ms' }}>
-        <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-          <div className="flex-1 relative group">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-hover:text-amber-500 transition-colors duration-300" size={20} />
-            <input
-              type="text"
-              placeholder="Search students by name or email..."
-              className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-400 transition-all duration-300 hover:border-amber-300"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          
-          <div className="flex space-x-3">
-            <select
-              className="border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-400 font-semibold hover:border-amber-300 transition-all duration-300 cursor-pointer"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-            
-            <button className="border-2 border-gray-300 text-gray-700 px-4 py-3 rounded-xl hover:bg-gradient-to-r hover:from-amber-50 hover:to-yellow-50 hover:border-amber-300 transition-all duration-300 flex items-center font-semibold hover:scale-105">
-              <Filter size={20} className="mr-2" />
-              Filter
-            </button>
-          </div>
+      {/* Student cards */}
+      {filtered.length === 0 ? (
+        <div className="bg-white rounded-xl border border-gray-200 py-14 text-center">
+          <Users size={36} className="mx-auto text-gray-300 mb-3" />
+          <p className="text-gray-500 font-medium">No students found</p>
+          <p className="text-gray-400 text-sm mt-1">{searchTerm || statusFilter !== 'all' ? 'Try adjusting your filters' : 'No students enrolled yet'}</p>
         </div>
-      </div>
-
-      {/* Students Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredStudents.map((student, index) => {
-          const isHovered = hoveredCard === student._id;
-          const studentStatus = student.status === 'Deleted' || student.status === 'Inactive' ? 'inactive' : 'active';
-          
-          return (
-            <div
-              key={student._id}
-              className={`group relative bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden cursor-pointer ${
-                isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-              }`}
-              style={{ 
-                transitionDelay: `${500 + index * 100}ms`,
-                animation: isHovered ? 'pulse 2s ease-in-out infinite' : 'none'
-              }}
-              onMouseEnter={() => setHoveredCard(student._id)}
-              onMouseLeave={() => setHoveredCard(null)}
-            >
-              {/* Background gradient */}
-              <div className="absolute inset-0 bg-gradient-to-br from-amber-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              
-              {/* Shine effect */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              </div>
-
-              <div className="relative">
-                {/* Header with Avatar */}
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map(student => {
+            const isActive = student.status !== 'Deleted' && student.status !== 'Inactive';
+            return (
+              <div key={student._id} className="bg-white rounded-xl border border-gray-200 p-5 hover:border-amber-200 hover:shadow-sm transition-all duration-150">
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-4">
-                    <div className={`relative ${isHovered ? 'scale-110 rotate-6' : ''} transition-all duration-300`}>
-                      <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-500 rounded-full blur-md opacity-50 group-hover:opacity-75 transition-opacity"></div>
-                      <div className="relative w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-500 rounded-full flex items-center justify-center shadow-lg">
-                        <span className="text-white font-bold text-xl">{getAvatarInitials(student)}</span>
-                      </div>
-                      {/* Status indicator */}
-                      <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white ${
-                        studentStatus === 'active' ? 'bg-green-500' : 'bg-gray-400'
-                      } ${studentStatus === 'active' ? 'animate-pulse' : ''}`}></div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center font-bold text-amber-700 text-base flex-shrink-0">
+                      {getInitials(student)}
                     </div>
                     <div>
-                      <h3 className={`text-lg font-bold text-gray-900 transition-colors duration-300 ${
-                        isHovered ? 'text-amber-600' : ''
-                      }`}>{student.name || student.username || 'Student'}</h3>
-                      <div className="mt-1">
-                        {getStatusBadge(student)}
-                      </div>
+                      <div className="font-semibold text-gray-900 text-sm">{student.name || student.username || 'Student'}</div>
+                      <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md mt-0.5 ${isActive ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                        {isActive ? <UserCheck size={11}/> : <UserX size={11}/>}
+                        {isActive ? 'Active' : 'Inactive'}
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Contact Info */}
-                <div className="space-y-2 mb-4">
+                <div className="space-y-1.5 mb-4">
                   {student.email && (
-                    <div className="flex items-center text-sm text-gray-600 hover:text-amber-600 transition-colors">
-                      <Mail size={14} className="mr-2 text-amber-500" />
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <Mail size={12} className="text-gray-400 flex-shrink-0" />
                       <span className="truncate">{student.email}</span>
                     </div>
                   )}
-                  {student.phone && (
-                    <div className="flex items-center text-sm text-gray-600 hover:text-amber-600 transition-colors">
-                      <Phone size={14} className="mr-2 text-amber-500" />
-                      {student.phone}
-                    </div>
-                  )}
-                  {student.lastActive && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Clock size={14} className="mr-2 text-amber-500" />
-                      Last active: {student.lastActive}
-                    </div>
-                  )}
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-3 hover:scale-105 transition-transform duration-300">
-                    <div className="flex items-center justify-between">
-                      <BookOpen size={18} className="text-blue-600" />
-                      <span className="text-2xl font-bold text-blue-600">{student.enrolledCourses || student.coursesEnrolled?.length || 0}</span>
-                    </div>
-                    <p className="text-xs text-blue-700 font-semibold mt-1">Enrolled</p>
-                  </div>
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-3 hover:scale-105 transition-transform duration-300">
-                    <div className="flex items-center justify-between">
-                      <Award size={18} className="text-green-600" />
-                      <span className="text-2xl font-bold text-green-600">{student.completedCourses || 0}</span>
-                    </div>
-                    <p className="text-xs text-green-700 font-semibold mt-1">Completed</p>
-                  </div>
-                </div>
-
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-gray-700 flex items-center">
-                      <Target size={14} className="mr-1 text-amber-500" />
-                      Overall Progress
-                    </span>
-                    <span className="text-sm font-bold text-amber-600">{student.progress || 50}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
-                    <div 
-                      className="h-3 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-600 rounded-full transition-all duration-1000 animate-shimmer relative"
-                      style={{ 
-                        width: `${student.progress || 50}%`,
-                        backgroundSize: '200% 100%'
-                      }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-                    <span>{student.completedLessons || 0} / {student.totalLessons || 0} lessons</span>
-                    <span className="flex items-center">
-                      <Star size={12} className="mr-1 text-yellow-500 fill-current" />
-                      {student.rating || '0.0'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <div className="flex items-center text-xs text-gray-500">
-                    <Calendar size={12} className="mr-1" />
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <Calendar size={12} className="text-gray-400 flex-shrink-0" />
                     Joined {student.createdAt ? new Date(student.createdAt).toLocaleDateString() : 'N/A'}
                   </div>
-                  <button className="text-white bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 hover:shadow-lg shadow-amber-400/50 flex items-center text-sm font-semibold">
-                    <Eye size={14} className="mr-1" />
-                    View Details
-                  </button>
                 </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
 
-      {/* Empty State */}
-      {filteredStudents.length === 0 && (
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-16 text-center animate-fadeIn">
-          <div className="relative inline-block">
-            <div className="absolute inset-0 bg-amber-400/20 rounded-full blur-2xl animate-pulse"></div>
-            <Users size={64} className="relative mx-auto text-amber-500 mb-6" />
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">No students found</h3>
-          <p className="text-gray-500 text-lg">
-            {searchTerm || statusFilter !== 'all' 
-              ? 'Try adjusting your search or filters' 
-              : 'No students enrolled yet'
-            }
-          </p>
-          {(searchTerm || statusFilter !== 'all') && (
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setStatusFilter('all');
-              }}
-              className="mt-6 bg-gradient-to-r from-amber-500 to-amber-600 text-white px-6 py-3 rounded-xl hover:from-amber-600 hover:to-amber-700 font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300"
-            >
-              Clear filters
-            </button>
-          )}
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <div className="bg-gray-50 rounded-lg p-2.5 text-center">
+                    <div className="text-lg font-bold text-gray-900">{student.enrolledCourses || student.coursesEnrolled?.length || 0}</div>
+                    <div className="text-xs text-gray-400">Enrolled</div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-2.5 text-center">
+                    <div className="text-lg font-bold text-gray-900">{student.completedCourses || 0}</div>
+                    <div className="text-xs text-gray-400">Completed</div>
+                  </div>
+                </div>
+
+                <button onClick={() => setSelectedStudentId(student._id)}
+                  className="w-full py-2 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-colors">
+                  View Details
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
-
-      <style jsx>{`
-        @keyframes shimmer {
-          0% { background-position: -200% center; }
-          100% { background-position: 200% center; }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        .animate-shimmer {
-          animation: shimmer 3s linear infinite;
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out;
-        }
-      `}</style>
     </div>
   );
 };

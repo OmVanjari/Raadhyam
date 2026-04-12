@@ -58,7 +58,7 @@ const UserCoursesPage = () => {
         setEnrolledCourses(prev => new Set([...prev, courseId]));
         setNotification({
           type: 'success',
-          message: `Successfully enrolled in "${courseTitle}"!`
+          message: `Enrolled in "${courseTitle}"! Check My Courses tab.`
         });
       }
     } catch (error) {
@@ -113,8 +113,8 @@ const UserCoursesPage = () => {
       )}
 
       <div style={{ marginBottom:'1.75rem' }}>
-        <h1 style={{ fontFamily:SERIF, fontSize:'2rem', fontWeight:700, color:SLATE, marginBottom:6 }}>My Courses</h1>
-        <p style={{ color:MUTED, fontSize:'0.9rem', fontFamily:SANS }}>Browse all available music courses</p>
+        <h1 style={{ fontFamily:SERIF, fontSize:'2rem', fontWeight:700, color:SLATE, marginBottom:6 }}>Explore Courses</h1>
+        <p style={{ color:MUTED, fontSize:'0.9rem', fontFamily:SANS }}>Browse and enroll in available music courses</p>
       </div>
 
       <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍  Search courses..."
@@ -131,8 +131,8 @@ const UserCoursesPage = () => {
             <div key={i} style={{ background:'#fff', borderRadius:16, overflow:'hidden', border:'1px solid #F1F5F9', boxShadow:'0 2px 12px rgba(30,41,59,0.05)', transition:'transform 0.2s, box-shadow 0.2s', cursor:'pointer' }}
               onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-4px)'; e.currentTarget.style.boxShadow='0 12px 32px rgba(217,119,6,0.14)'; }}
               onMouseLeave={e=>{ e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow='0 2px 12px rgba(30,41,59,0.05)'; }}>
-              {c.thumbnail
-                ? <img src={c.thumbnail} alt={c.title} style={{ width:'100%', height:160, objectFit:'cover' }} />
+              {c.thumbnailUrl
+                ? <img src={c.thumbnailUrl} alt={c.title} style={{ width:'100%', height:160, objectFit:'cover' }} />
                 : <div style={{ width:'100%', height:160, background:`linear-gradient(135deg,${AMBER},#B45309)`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'3rem' }}>🎵</div>
               }
               <div style={{ padding:'1.25rem' }}>

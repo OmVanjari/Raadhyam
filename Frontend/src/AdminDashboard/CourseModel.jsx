@@ -540,12 +540,12 @@ const CourseFormModal = ({
   ───────────────────────────────────────────── */
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/60 backdrop-blur-sm overflow-y-auto py-6 px-4"
+      className="fixed inset-0 z-[9999] flex items-end sm:items-start justify-center bg-black/60 backdrop-blur-sm overflow-y-auto sm:py-6 px-0 sm:px-4"
       onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
     >
       <div
-        className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl flex flex-col"
-        style={{ maxHeight: 'calc(100vh - 48px)' }}
+        className="bg-white w-full sm:rounded-2xl sm:max-w-4xl shadow-2xl flex flex-col rounded-t-2xl"
+        style={{ maxHeight: '95vh', height: '95vh' }}
         onClick={e => e.stopPropagation()}
       >
         {/* ── Header ── */}
@@ -578,14 +578,14 @@ const CourseFormModal = ({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-3 text-xs sm:text-sm font-semibold border-b-2 whitespace-nowrap transition-all duration-200 ${
+                className={`flex items-center gap-1 px-3 py-3 text-xs font-semibold border-b-2 whitespace-nowrap transition-all duration-200 ${
                   activeTab === tab.id
                     ? 'border-amber-400 text-amber-600 bg-amber-50/50'
                     : 'border-transparent text-gray-500 hover:text-amber-500 hover:border-amber-200'
                 }`}
               >
-                <Icon size={15} />
-                <span className="hidden sm:inline">{tab.label}</span>
+                <Icon size={14} />
+                <span className="hidden xs:inline sm:inline">{tab.label}</span>
               </button>
             );
           })}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, X, LogOut, User, Home, BookOpen, FileText, Music, Sparkles } from 'lucide-react';
+import { Menu, X, LogOut, User, Home, BookOpen, FileText, Music, Sparkles, GraduationCap } from 'lucide-react';
 
 const UserDashboardLayout = ({ children, activeTab, setActiveTab }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,10 +20,11 @@ const UserDashboardLayout = ({ children, activeTab, setActiveTab }) => {
   })();
 
   const navigation = [
-    { name: 'Dashboard', icon: Home, id: 'home' },
-    { name: 'My Courses', icon: BookOpen, id: 'courses' },
-    { name: 'Music Notes', icon: FileText, id: 'notes' },
-    { name: 'My Profile', icon: User, id: 'profile' },
+    { name: 'Dashboard',        icon: Home,           id: 'home' },
+    { name: 'My Courses',       icon: GraduationCap,  id: 'enrolled' },
+    { name: 'Explore Courses',  icon: BookOpen,       id: 'explore' },
+    { name: 'Music Notes',      icon: FileText,       id: 'notes' },
+    { name: 'My Profile',       icon: User,           id: 'profile' },
   ];
 
   const handleLogout = () => {

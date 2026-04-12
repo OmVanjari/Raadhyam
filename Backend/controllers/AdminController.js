@@ -782,42 +782,45 @@ export const getDashboardStats = async (req, res) => {
 
 export const getAllUsersAdmin = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, role, status, plan } = req.query;
+    const { page = 1, limit = 50, search, role, status, plan } = req.query;
     const skip = (page - 1) * limit;
 
     const query = { status: { $ne: "Deleted" } };
-
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
         { email: { $regex: search, $options: 'i' } }
       ];
     }
-
-    if (role) query.role = role;
+    if (role)   query.role   = role;
     if (status) query.status = status;
-    if (plan) query.plan = plan;
+    if (plan)   query.plan   = plan;
 
     const [users, total] = await Promise.all([
-      User.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit)),
+      User.find(query).select('-password -currentToken -resetPasswordToken -resetPasswordExpires').sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
       User.countDocuments(query)
     ]);
 
-    res.status(200).json({
-      success: true,
-      count: total,
-      users
-    });
+    // Attach enrollment counts to each user
+    const usersWithStats = await Promise.all(users.map(async (u) => {
+      const enrollments = await Enrollment.find({ user: u._id });
+      const completedCount = enrollments.filter(e => e.progress === 100).length;
+      const avgProgress = enrollments.length > 0
+        ? Math.round(enrollments.reduce((s, e) => s + (e.progress || 0), 0) / enrollments.length)
+        : 0;
+      return {
+        ...u.toObject(),
+        enrolledCourses:  enrollments.length,
+        completedCourses: completedCount,
+        progress:         avgProgress,
+      };
+    }));
+
+    res.status(200).json({ success: true, count: total, users: usersWithStats });
 
   } catch (error) {
     console.error('Get Users Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch users'
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch users' });
   }
 };
 
@@ -872,26 +875,62 @@ export const createUser = async (req, res) => {
 
 export const getUserByIdAdmin = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).select('-password -currentToken -resetPasswordToken -resetPasswordExpires');
 
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
+
+    // Fetch all enrollments for this user with course details
+    const enrollments = await Enrollment.find({ user: req.params.id })
+      .populate('course', 'title thumbnailUrl category level modules')
+      .sort({ enrolledAt: -1 });
+
+    // For each enrollment, count completed lessons from Progress
+    const enrollmentsWithProgress = await Promise.all(enrollments.map(async (enr) => {
+      const totalLessons = enr.course?.modules?.reduce((t, m) => t + (m.lessons?.length || 0), 0) || 0;
+      const completedCount = await Progress.countDocuments({ enrollment: enr._id, completed: true });
+      const progressPct = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : (enr.progress || 0);
+
+      return {
+        courseId:    enr.course?._id,
+        title:       enr.course?.title || 'Unknown Course',
+        thumbnailUrl:enr.course?.thumbnailUrl,
+        category:    enr.course?.category,
+        level:       enr.course?.level,
+        enrolledAt:  enr.enrolledAt,
+        isActive:    enr.isActive,
+        progress:    progressPct,
+        completedLessons: completedCount,
+        totalLessons,
+        completed:   progressPct === 100,
+      };
+    }));
+
+    const totalEnrolled   = enrollmentsWithProgress.length;
+    const totalCompleted  = enrollmentsWithProgress.filter(e => e.completed).length;
+    const avgProgress     = totalEnrolled > 0
+      ? Math.round(enrollmentsWithProgress.reduce((s, e) => s + e.progress, 0) / totalEnrolled)
+      : 0;
+    const totalLessonsAll     = enrollmentsWithProgress.reduce((s, e) => s + e.totalLessons, 0);
+    const completedLessonsAll = enrollmentsWithProgress.reduce((s, e) => s + e.completedLessons, 0);
 
     res.status(200).json({
       success: true,
-      user
+      user: {
+        ...user.toObject(),
+        enrolledCourses:  totalEnrolled,
+        completedCourses: totalCompleted,
+        progress:         avgProgress,
+        totalLessons:     totalLessonsAll,
+        completedLessons: completedLessonsAll,
+        coursesEnrolled:  enrollmentsWithProgress,
+      }
     });
 
   } catch (error) {
     console.error('Get User Error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch user'
-    });
+    res.status(500).json({ success: false, message: 'Failed to fetch user' });
   }
 };
 

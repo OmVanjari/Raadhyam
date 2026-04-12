@@ -100,7 +100,17 @@ const MainDashboardAdmin = () => {
     try {
       setLoading(true);
       const response = await axios.get('/api/admin/dashboard/stats', getAxiosConfig());
-      setDashboardStats(response.data);
+      const d = response.data;
+      setDashboardStats({
+        totalCourses:     d.stats?.totalCourses     || 0,
+        publishedCourses: d.stats?.publishedCourses || 0,
+        totalEnrollments: d.stats?.totalEnrollments || 0,
+        totalNotes:       d.stats?.totalNotes       || 0,
+        totalUsers:       d.stats?.totalUsers       || 0,
+        monthlyRevenue:   d.stats?.monthlyRevenue   || 0,
+        recentEnrollments: d.recentEnrollments      || [],
+        popularCourses:    d.popularCourses         || [],
+      });
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
     } finally {
@@ -420,9 +430,19 @@ const MainDashboardAdmin = () => {
     switch (activeTab) {
       case 'dashboard':
         return (
-          <DashboardPage 
-            dashboardStats={dashboardStats} 
-            loading={loading} 
+          <DashboardPage
+            dashboardStats={dashboardStats}
+            loading={loading}
+            onOpenStudent={(userId) => {
+              setActiveTab('students');
+              // StudentPage will handle opening detail via selectedStudentId
+              window._dashboardOpenStudent = userId;
+            }}
+            onOpenCourse={(courseId) => {
+              const course = courses.find(c => c._id === courseId);
+              if (course) { viewCourseDetail(course); setActiveTab('courses'); }
+              else { setActiveTab('courses'); }
+            }}
           />
         );
       case 'courses':
@@ -453,7 +473,7 @@ const MainDashboardAdmin = () => {
           />
         );
       case 'students':
-        return <StudentsPage />;
+        return <StudentsPage initialStudentId={window._dashboardOpenStudent} onStudentOpened={() => { window._dashboardOpenStudent = null; }} />;
       default:
         return <DashboardPage dashboardStats={dashboardStats} loading={loading} />;
     }
