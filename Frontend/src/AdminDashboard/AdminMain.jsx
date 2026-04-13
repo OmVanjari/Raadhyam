@@ -296,13 +296,14 @@ const MainDashboardAdmin = () => {
     setShowModuleForm(true);
   };
 
-  const openLessonForm = (lesson = null, moduleIndex = null, lessonIndex = null) => {
-    console.log('📝 openLessonForm called with:', { lesson, moduleIndex, lessonIndex });
+  const openLessonForm = (lesson = null, moduleIndex = null, lessonIndex = null, moduleId = null) => {
+    console.log('📝 openLessonForm called with:', { lesson, moduleIndex, lessonIndex, moduleId });
     console.log('📦 Lesson object properties:', lesson ? Object.keys(lesson) : 'null');
     const editingLessonData = {
       ...(lesson || {}),
       moduleIndex,
-      lessonIndex
+      lessonIndex,
+      moduleId
     };
     console.log('✅ Final editingLesson data:', editingLessonData);
     setEditingLesson(editingLessonData);
@@ -328,12 +329,15 @@ const MainDashboardAdmin = () => {
 
       console.log('✅ API Response:', response.data);
 
-      // Refresh the selected course data
-      const updatedCourses = await fetchCourses();
-      const updatedCourse = updatedCourses.find(c => c._id === selectedCourse._id);
-      console.log('🔄 Updated course from fetch:', updatedCourse);
-      setSelectedCourse(updatedCourse);
-      return updatedCourse;
+      // Refresh the selected course data directly from the backend API
+      const courseResponse = await axios.get(`/api/admin/courses/${selectedCourse._id}`, getAxiosConfig());
+      console.log('🔄 Updated course from API:', courseResponse.data.course);
+      setSelectedCourse(courseResponse.data.course);
+      
+      // Also refresh the courses list to keep it in sync
+      await fetchCourses();
+      
+      return courseResponse.data.course;
     } catch (error) {
       console.error('❌ Error saving course content:', error);
       console.error('❌ Error response:', error.response?.data);
@@ -403,6 +407,13 @@ const MainDashboardAdmin = () => {
 
       const updatedModules = selectedCourse.modules ? [...selectedCourse.modules] : [];
 
+      // Ensure all modules have lessons array initialized
+      updatedModules.forEach((module, idx) => {
+        if (!module.lessons) {
+          updatedModules[idx].lessons = [];
+        }
+      });
+
       if (editingLesson) {
         let moduleIndex = editingLesson.moduleIndex;
 
@@ -426,13 +437,29 @@ const MainDashboardAdmin = () => {
 
         // Ensure the module exists
         if (moduleIndex === undefined || moduleIndex === -1 || !updatedModules[moduleIndex]) {
-          console.error('❌ Module not found. Index:', moduleIndex, 'Module ID:', editingLesson.moduleId, 'Total modules:', updatedModules.length);
-          throw new Error('Module not found. Please try refreshing the page.');
-        }
-
-        // Ensure the module has a lessons array
-        if (!updatedModules[moduleIndex].lessons) {
-          updatedModules[moduleIndex].lessons = [];
+          console.error('❌ Module not found by index. Index:', moduleIndex, 'Module ID:', editingLesson.moduleId, 'Total modules:', updatedModules.length);
+          
+          // Fallback: try to find the module by matching lesson data if available
+          if (lessonData._id && editingLesson.lessonIndex !== undefined) {
+            for (let i = 0; i < updatedModules.length; i++) {
+              if (updatedModules[i].lessons && updatedModules[i].lessons[editingLesson.lessonIndex]?._id === lessonData._id) {
+                moduleIndex = i;
+                console.log('✅ Found module by lesson _id at index:', moduleIndex);
+                break;
+              }
+            }
+          }
+          
+          // If still not found, try to use the first available module as fallback
+          if (moduleIndex === undefined || moduleIndex === -1 || !updatedModules[moduleIndex]) {
+            if (updatedModules.length > 0) {
+              moduleIndex = 0;
+              console.log('⚠️ Using first module as fallback at index:', moduleIndex);
+            } else {
+              console.error('❌ No modules available');
+              throw new Error('No modules found. Please create a module first.');
+            }
+          }
         }
 
         console.log('📊 Current lessons count:', updatedModules[moduleIndex].lessons.length);
@@ -441,11 +468,13 @@ const MainDashboardAdmin = () => {
 
         let lessonIndex = editingLesson.lessonIndex;
 
-        // If lessonIndex is not available but lesson has _id, find it by _id
-        if ((lessonIndex === undefined || lessonIndex === null) && lessonData._id) {
+        // If lessonIndex is not available or invalid, try to find lesson by _id
+        if ((lessonIndex === undefined || lessonIndex === null || lessonIndex === -1) && lessonData._id) {
           lessonIndex = updatedModules[moduleIndex].lessons.findIndex(l => l._id === lessonData._id);
           if (lessonIndex !== -1) {
             console.log('✅ Found lesson by _id at index:', lessonIndex);
+          } else {
+            console.log('⚠️ Lesson _id not found in module, will add as new lesson');
           }
         }
 

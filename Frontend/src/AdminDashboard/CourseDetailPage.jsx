@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { 
   ArrowLeft, 
   BookOpen, 
@@ -13,7 +14,8 @@ import {
   CheckCircle,
   Settings,
   Sparkles,
-  TrendingUp
+  TrendingUp,
+  Loader2
 } from 'lucide-react';
 import ModuleList from './ModuleList';
 
@@ -28,13 +30,41 @@ const CourseDetailPage = ({
 }) => {
   const [courseData, setCourseData] = useState(course);
   const [isVisible, setIsVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const getAxiosConfig = () => {
+    const token = localStorage.getItem('token');
+    return {
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
+  const fetchCourseData = async () => {
+    if (!course?._id) return;
+    
+    try {
+      setLoading(true);
+      const response = await axios.get(`/api/admin/courses/${course._id}`, getAxiosConfig());
+      setCourseData(response.data.course);
+    } catch (error) {
+      console.error('Error fetching course data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     setIsVisible(true);
-  }, []);
+    fetchCourseData();
+  }, [course?._id]);
 
   useEffect(() => {
-    setCourseData(course);
+    if (course) {
+      setCourseData(course);
+    }
   }, [course]);
 
   // Calculate course statistics
@@ -90,7 +120,7 @@ const CourseDetailPage = ({
 
   const handleAddLesson = (moduleIndex) => {
     const module = courseData.modules[moduleIndex];
-    onOpenLessonForm({ moduleIndex, moduleId: module?._id });
+    onOpenLessonForm(null, moduleIndex, null, module?._id);
   };
 
   const handleEditLesson = (lesson, moduleIndex, lessonIndex) => {
@@ -106,19 +136,28 @@ const CourseDetailPage = ({
       content: lesson.content,
       thumbnailUrl: lesson.thumbnailUrl,
       isFreePreview: lesson.isFreePreview,
-      _id: lesson._id,
-      // Explicitly set the indices for editing context
-      moduleIndex,
-      lessonIndex,
-      moduleId: module?._id
+      _id: lesson._id
     };
-    onOpenLessonForm(lessonData);
+    // Pass parameters in the correct order: lesson, moduleIndex, lessonIndex, moduleId
+    onOpenLessonForm(lessonData, moduleIndex, lessonIndex, module?._id);
   };
 
   const handleSaveModules = async (updatedModules) => {
     await onSaveContent(updatedModules);
-    setCourseData(prev => ({ ...prev, modules: updatedModules }));
+    // Refetch course data from backend to get the latest state
+    await fetchCourseData();
   };
+
+  if (loading && !courseData) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="animate-spin mx-auto text-amber-600" size={48} />
+          <p className="mt-4 text-gray-600 font-semibold">Loading course data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

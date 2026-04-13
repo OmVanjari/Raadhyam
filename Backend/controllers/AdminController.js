@@ -518,7 +518,7 @@ export const addModule = async (req, res) => {
           title: module.title || `Module ${moduleIndex + 1}`,
           description: module.description || '',
           position: moduleIndex,
-          updatedAt: new Date()
+          updatedAt: new Date() 
         };
 
         if (module._id) {
