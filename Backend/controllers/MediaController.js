@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Album from '../models/AlbumSchema.js';
 import Artist from '../models/ArtistSchema.js';
 import Playlist from '../models/PlaylistSchema.js';
@@ -29,7 +30,7 @@ export const createAlbum = async (req, res, next) => {
       coverUrl,
       coverFileName: coverMetadata?.originalName,
       coverMetadata,
-      createdBy: req.user.id
+      createdBy: req.user._id
     });
 
     await album.save();
@@ -108,6 +109,11 @@ export const updateAlbum = async (req, res, next) => {
 export const deleteAlbum = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return errorResponse(res, 'Invalid album ID format', 400);
+    }
+
     const album = await Album.findByIdAndDelete(id);
     
     if (!album) {
@@ -143,7 +149,7 @@ export const createArtist = async (req, res, next) => {
       monthlyListeners,
       bio,
       socialLinks,
-      createdBy: req.user.id
+      createdBy: req.user._id
     });
 
     await artist.save();
@@ -227,6 +233,11 @@ export const updateArtist = async (req, res, next) => {
 export const deleteArtist = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return errorResponse(res, 'Invalid artist ID format', 400);
+    }
+
     const artist = await Artist.findByIdAndDelete(id);
     
     if (!artist) {
@@ -261,7 +272,7 @@ export const createPlaylist = async (req, res, next) => {
       coverImageFileName: coverMetadata?.originalName,
       coverImageMetadata,
       songs: songs || [],
-      creator: req.user.id,
+      creator: req.user._id,
       creatorName: req.user.name || req.user.email,
       tags
     });
@@ -331,13 +342,19 @@ export const updatePlaylist = async (req, res, next) => {
     const { id } = req.params;
     const updateData = req.body;
 
-    const playlist = await Playlist.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+    const playlist = await Playlist.findById(id);
     
     if (!playlist) {
       return notFoundResponse(res, 'Playlist not found');
     }
 
-    return successResponse(res, playlist, 'Playlist updated successfully');
+    if (playlist.creator.toString() !== req.user._id.toString()) {
+      return errorResponse(res, 'You do not have permission to update this playlist', 403);
+    }
+
+    const updatedPlaylist = await Playlist.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+
+    return successResponse(res, updatedPlaylist, 'Playlist updated successfully');
   } catch (error) {
     next(error);
   }
@@ -346,11 +363,22 @@ export const updatePlaylist = async (req, res, next) => {
 export const deletePlaylist = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const playlist = await Playlist.findByIdAndDelete(id);
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return errorResponse(res, 'Invalid playlist ID format', 400);
+    }
+
+    const playlist = await Playlist.findById(id);
     
     if (!playlist) {
       return notFoundResponse(res, 'Playlist not found');
     }
+
+    if (playlist.creator.toString() !== req.user._id.toString()) {
+      return errorResponse(res, 'You do not have permission to delete this playlist', 403);
+    }
+
+    await Playlist.findByIdAndDelete(id);
 
     return successResponse(res, null, 'Playlist deleted successfully');
   } catch (error) {
@@ -366,6 +394,10 @@ export const addToPlaylist = async (req, res, next) => {
     const playlist = await Playlist.findById(id);
     if (!playlist) {
       return notFoundResponse(res, 'Playlist not found');
+    }
+
+    if (playlist.creator.toString() !== req.user._id.toString()) {
+      return errorResponse(res, 'You do not have permission to modify this playlist', 403);
     }
 
     if (!playlist.songs.includes(songId)) {
@@ -386,6 +418,10 @@ export const removeFromPlaylist = async (req, res, next) => {
     const playlist = await Playlist.findById(id);
     if (!playlist) {
       return notFoundResponse(res, 'Playlist not found');
+    }
+
+    if (playlist.creator.toString() !== req.user._id.toString()) {
+      return errorResponse(res, 'You do not have permission to modify this playlist', 403);
     }
 
     playlist.songs = playlist.songs.filter(s => s.toString() !== songId);

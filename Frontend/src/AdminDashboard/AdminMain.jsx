@@ -136,7 +136,7 @@ const MainDashboardAdmin = () => {
       const response = await axios.post('/api/admin/courses', courseData, getAxiosConfig());
       await fetchCourses();
       await fetchDashboardStats();
-      return response.data;
+      return response.data.course || response.data;
     } catch (error) {
       console.error('Error creating course:', error);
       const msg = error?.response?.data?.message || error?.response?.data?.error || error.message || 'Error creating course';
@@ -160,6 +160,7 @@ const MainDashboardAdmin = () => {
   const deleteCourse = async (id) => {
     if (window.confirm('Are you sure you want to delete this course?')) {
       try {
+        console.log('🗑️ Deleting course with ID:', id);
         await axios.delete(`/api/admin/courses/${id}`, getAxiosConfig());
         await fetchCourses();
         await fetchDashboardStats();
@@ -296,23 +297,65 @@ const MainDashboardAdmin = () => {
   };
 
   const openLessonForm = (lesson = null, moduleIndex = null, lessonIndex = null) => {
-    setEditingLesson({ ...lesson, moduleIndex, lessonIndex });
+    console.log('📝 openLessonForm called with:', { lesson, moduleIndex, lessonIndex });
+    console.log('📦 Lesson object properties:', lesson ? Object.keys(lesson) : 'null');
+    const editingLessonData = {
+      ...(lesson || {}),
+      moduleIndex,
+      lessonIndex
+    };
+    console.log('✅ Final editingLesson data:', editingLessonData);
+    setEditingLesson(editingLessonData);
     setShowLessonForm(true);
   };
 
-  const saveCourseContent = async () => {
-    if (!selectedCourse) return;
-    
-    // try {
-    //   await updateCourseModules(selectedCourse._id, updatedModules);
-    //   // Refresh the selected course data
-    //   const updatedCourses = await fetchCourses();
-    //   const updatedCourse = updatedCourses.find(c => c._id === selectedCourse._id);
-    //   setSelectedCourse(updatedCourse);
-    //   return updatedCourse;
-    // } catch (error) {
-    //   throw error;
-    // }
+  const saveCourseContent = async (updatedModules) => {
+    if (!selectedCourse) {
+      throw new Error('No course selected');
+    }
+
+    if (!selectedCourse._id) {
+      throw new Error('Course ID is missing. Please refresh the page and try again.');
+    }
+
+    try {
+      console.log('🌐 POSTing to:', `/api/admin/courses/${selectedCourse._id}/modules`);
+      console.log('📦 Sending modules:', JSON.stringify(updatedModules, null, 2));
+
+      const response = await axios.post(`/api/admin/courses/${selectedCourse._id}/modules`, {
+        modules: updatedModules
+      }, getAxiosConfig());
+
+      console.log('✅ API Response:', response.data);
+
+      // Refresh the selected course data
+      const updatedCourses = await fetchCourses();
+      const updatedCourse = updatedCourses.find(c => c._id === selectedCourse._id);
+      console.log('🔄 Updated course from fetch:', updatedCourse);
+      setSelectedCourse(updatedCourse);
+      return updatedCourse;
+    } catch (error) {
+      console.error('❌ Error saving course content:', error);
+      console.error('❌ Error response:', error.response?.data);
+      throw error;
+    }
+  };
+
+  const handleDeleteModule = async (moduleIndex) => {
+    if (!selectedCourse || !selectedCourse.modules[moduleIndex]) return;
+
+    try {
+      const moduleId = selectedCourse.modules[moduleIndex]._id;
+      await axios.delete(`/api/admin/courses/${selectedCourse._id}/modules/${moduleId}`, getAxiosConfig());
+
+      // Refresh the selected course data
+      const updatedCourses = await fetchCourses();
+      const updatedCourse = updatedCourses.find(c => c._id === selectedCourse._id);
+      setSelectedCourse(updatedCourse);
+    } catch (error) {
+      console.error('Error deleting module:', error);
+      throw error;
+    }
   };
 
   const handleSaveModule = async (moduleData) => {
@@ -349,22 +392,73 @@ const MainDashboardAdmin = () => {
   };
 
   const handleSaveLesson = async (lessonData) => {
-    if (!selectedCourse) return;
+    if (!selectedCourse) {
+      console.error('❌ No selected course');
+      return;
+    }
 
     try {
+      console.log('📝 Saving lesson with data:', lessonData);
+      console.log('📚 Editing lesson context:', editingLesson);
+
       const updatedModules = selectedCourse.modules ? [...selectedCourse.modules] : [];
-      
-      if (editingLesson && editingLesson.moduleIndex !== undefined) {
-        const moduleIndex = editingLesson.moduleIndex;
-        
-        if (editingLesson.lessonIndex !== undefined) {
+
+      if (editingLesson) {
+        let moduleIndex = editingLesson.moduleIndex;
+
+        console.log('🔍 Looking for module:', {
+          moduleIndex: editingLesson.moduleIndex,
+          moduleId: editingLesson.moduleId,
+          totalModules: updatedModules.length,
+          modules: updatedModules.map(m => ({ _id: m._id, title: m.title }))
+        });
+
+        // If we have a module ID, try to find it by ID instead of index
+        if (editingLesson.moduleId) {
+          const foundIndex = updatedModules.findIndex(m => m._id === editingLesson.moduleId);
+          if (foundIndex !== -1) {
+            moduleIndex = foundIndex;
+            console.log('✅ Found module by ID at index:', moduleIndex);
+          } else {
+            console.log('⚠️ Module ID not found, falling back to index:', editingLesson.moduleIndex);
+          }
+        }
+
+        // Ensure the module exists
+        if (moduleIndex === undefined || moduleIndex === -1 || !updatedModules[moduleIndex]) {
+          console.error('❌ Module not found. Index:', moduleIndex, 'Module ID:', editingLesson.moduleId, 'Total modules:', updatedModules.length);
+          throw new Error('Module not found. Please try refreshing the page.');
+        }
+
+        // Ensure the module has a lessons array
+        if (!updatedModules[moduleIndex].lessons) {
+          updatedModules[moduleIndex].lessons = [];
+        }
+
+        console.log('📊 Current lessons count:', updatedModules[moduleIndex].lessons.length);
+        console.log('📝 Lesson index:', editingLesson.lessonIndex);
+        console.log('🆔 Lesson _id:', editingLesson._id);
+
+        let lessonIndex = editingLesson.lessonIndex;
+
+        // If lessonIndex is not available but lesson has _id, find it by _id
+        if ((lessonIndex === undefined || lessonIndex === null) && lessonData._id) {
+          lessonIndex = updatedModules[moduleIndex].lessons.findIndex(l => l._id === lessonData._id);
+          if (lessonIndex !== -1) {
+            console.log('✅ Found lesson by _id at index:', lessonIndex);
+          }
+        }
+
+        if (lessonIndex !== undefined && lessonIndex !== null && lessonIndex !== -1) {
           // Update existing lesson
-          updatedModules[moduleIndex].lessons[editingLesson.lessonIndex] = {
-            ...updatedModules[moduleIndex].lessons[editingLesson.lessonIndex],
+          console.log('✏️ Updating existing lesson at index:', lessonIndex);
+          updatedModules[moduleIndex].lessons[lessonIndex] = {
+            ...updatedModules[moduleIndex].lessons[lessonIndex],
             ...lessonData
           };
         } else {
           // Add new lesson
+          console.log('➕ Adding new lesson to module at index:', moduleIndex);
           const newLesson = {
             ...lessonData,
             position: updatedModules[moduleIndex].lessons.length,
@@ -374,38 +468,53 @@ const MainDashboardAdmin = () => {
             ...(updatedModules[moduleIndex].lessons || []),
             newLesson
           ];
+          console.log('✅ New lesson added. Total lessons:', updatedModules[moduleIndex].lessons.length);
         }
 
+        console.log('💾 Saving course content with', updatedModules.length, 'modules');
         const updatedCourse = await saveCourseContent(updatedModules);
         setSelectedCourse(updatedCourse);
         setShowLessonForm(false);
         setEditingLesson(null);
+        console.log('✅ Lesson saved successfully');
+      } else {
+        console.error('❌ No editingLesson context found');
       }
     } catch (error) {
+      console.error('Error saving lesson:', error);
       alert(error.message);
     }
   };
 
-  const handleDeleteModule = async (moduleIndex) => {
-    if (window.confirm('Are you sure you want to delete this module? All lessons in this module will also be deleted.')) {
-      try {
-        const updatedModules = selectedCourse.modules.filter((_, i) => i !== moduleIndex);
-        const updatedCourse = await saveCourseContent(updatedModules);
-        setSelectedCourse(updatedCourse);
-      } catch (error) {
-        alert(error.message);
-      }
-    }
-  };
-
   const handleDeleteLesson = async (moduleIndex, lessonIndex) => {
+    console.log('🗑️ Delete lesson called with moduleIndex:', moduleIndex, 'lessonIndex:', lessonIndex);
     if (window.confirm('Are you sure you want to delete this lesson?')) {
       try {
         const updatedModules = [...selectedCourse.modules];
+
+        console.log('📦 Total modules:', updatedModules.length);
+        console.log('📚 Module at index:', moduleIndex, updatedModules[moduleIndex]?.title);
+        console.log('📝 Lessons in module before delete:', updatedModules[moduleIndex]?.lessons?.length);
+
+        // Ensure the module exists
+        if (!updatedModules[moduleIndex]) {
+          console.error('❌ Module not found at index:', moduleIndex);
+          throw new Error('Module not found');
+        }
+
+        // Ensure the module has a lessons array
+        if (!updatedModules[moduleIndex].lessons) {
+          updatedModules[moduleIndex].lessons = [];
+        }
+
+        console.log('🗑️ Deleting lesson at index:', lessonIndex);
         updatedModules[moduleIndex].lessons = updatedModules[moduleIndex].lessons.filter((_, i) => i !== lessonIndex);
+        console.log('✅ Lessons after delete:', updatedModules[moduleIndex].lessons.length);
+
         const updatedCourse = await saveCourseContent(updatedModules);
         setSelectedCourse(updatedCourse);
       } catch (error) {
+        console.error('Error deleting lesson:', error);
         alert(error.message);
       }
     }

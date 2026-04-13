@@ -16,14 +16,27 @@ const LessonFormModal = ({ lesson, onSave, onClose, uploadFile }) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState(null);
-  const [ setFileSelected] = useState(false);
+  const [fileSelected, setFileSelected] = useState(false);
 
   useEffect(() => {
     if (lesson) {
+      setFormData({
+        title: lesson.title || '',
+        description: lesson.description || '',
+        type: lesson.type || 'video',
+        videoUrl: lesson.videoUrl || '',
+        pdfUrl: lesson.pdfUrl || '',
+        content: lesson.content || '',
+        thumbnailUrl: lesson.thumbnailUrl || '',
+        duration: lesson.duration || '',
+        isFreePreview: lesson.isFreePreview || false
+      });
+
       // Set file selected if editing and file already exists
-      if ((lesson.type === 'video' && lesson.videoUrl) || 
+      if ((lesson.type === 'video' && lesson.videoUrl) ||
           (lesson.type === 'pdf' && lesson.pdfUrl)) {
-        setFileSelected(true);}
+        setFileSelected(true);
+      }
     }
   }, [lesson]);
 
@@ -80,17 +93,22 @@ const LessonFormModal = ({ lesson, onSave, onClose, uploadFile }) => {
     }
     
     // ✅ VALIDATE THAT FILE IS UPLOADED BASED ON TYPE
-    if (formData.type === 'video' && !formData.videoUrl) {
+    // For editing, if lesson already has a file, allow updating without re-uploading
+    const hasExistingVideo = lesson && lesson.type === 'video' && lesson.videoUrl;
+    const hasExistingPdf = lesson && lesson.type === 'pdf' && lesson.pdfUrl;
+    const hasExistingContent = lesson && lesson.type === 'text' && lesson.content;
+    
+    if (formData.type === 'video' && !formData.videoUrl && !hasExistingVideo) {
       alert('Please upload a video file before saving the lesson');
       return;
     }
     
-    if (formData.type === 'pdf' && !formData.pdfUrl) {
+    if (formData.type === 'pdf' && !formData.pdfUrl && !hasExistingPdf) {
       alert('Please upload a PDF file before saving the lesson');
       return;
     }
     
-    if (formData.type === 'text' && !formData.content.trim()) {
+    if (formData.type === 'text' && !formData.content.trim() && !hasExistingContent) {
       alert('Please add text content before saving the lesson');
       return;
     }
@@ -102,23 +120,27 @@ const LessonFormModal = ({ lesson, onSave, onClose, uploadFile }) => {
       type: formData.type,
       duration: formData.duration || '00:00',
       isFreePreview: formData.isFreePreview || false,
-      // ✅ Only include relevant fields based on type
-      ...(formData.type === 'video' && { 
-        videoUrl: formData.videoUrl,
-        pdfUrl: undefined,
-        content: undefined 
-      }),
-      ...(formData.type === 'pdf' && { 
-        pdfUrl: formData.pdfUrl,
-        videoUrl: undefined,
-        content: undefined 
-      }),
-      ...(formData.type === 'text' && { 
-        content: formData.content,
-        videoUrl: undefined,
-        pdfUrl: undefined 
-      })
     };
+
+    // ✅ Preserve lesson _id when editing so backend knows to update instead of create new
+    if (lesson && lesson._id) {
+      cleanLessonData._id = lesson._id;
+    }
+
+    // ✅ Only include relevant fields based on type, preserving existing values if editing
+    if (formData.type === 'video') {
+      cleanLessonData.videoUrl = formData.videoUrl || (lesson && lesson.videoUrl) || '';
+      cleanLessonData.pdfUrl = undefined;
+      cleanLessonData.content = undefined;
+    } else if (formData.type === 'pdf') {
+      cleanLessonData.pdfUrl = formData.pdfUrl || (lesson && lesson.pdfUrl) || '';
+      cleanLessonData.videoUrl = undefined;
+      cleanLessonData.content = undefined;
+    } else if (formData.type === 'text') {
+      cleanLessonData.content = formData.content || (lesson && lesson.content) || '';
+      cleanLessonData.videoUrl = undefined;
+      cleanLessonData.pdfUrl = undefined;
+    }
 
     // ✅ Remove undefined fields
     Object.keys(cleanLessonData).forEach(key => {
@@ -327,7 +349,7 @@ const LessonFormModal = ({ lesson, onSave, onClose, uploadFile }) => {
         <div className="sticky top-0 bg-gradient-to-r from-amber-50 to-yellow-50 border-b border-gray-200 px-6 py-4 flex justify-between items-center z-10">
           <h3 className="text-xl font-bold bg-gradient-to-r from-amber-500 to-amber-700 bg-clip-text text-transparent flex items-center">
             <PlayCircle className="mr-2 text-amber-600" size={24} />
-            {lesson ? 'Edit Lesson' : 'Add New Lesson'}
+            {lesson && lesson._id ? 'Edit Lesson' : 'Add New Lesson'}
           </h3>
           <button 
             onClick={onClose} 
@@ -474,7 +496,7 @@ const LessonFormModal = ({ lesson, onSave, onClose, uploadFile }) => {
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                   {getTypeIcon(formData.type)}
                   <span className="ml-2 relative z-10">
-                    {lesson ? 'Update Lesson' : 'Add Lesson'}
+                    {lesson && lesson._id ? 'Update Lesson' : 'Add Lesson'}
                   </span>
                 </>
               )}

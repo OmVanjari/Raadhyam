@@ -30,7 +30,7 @@ export const getAllMusicNotes = async (req, res) => {
 
 export const createMusicNote = async (req, res) => {
   try {
-    const userId = req.user?._id || req.user?.id;
+    const userId = req.user._id;
 
     if (!userId) {
       return res.status(401).json({ 
@@ -313,13 +313,13 @@ export const validateCourse = async (req, res) => {
 
 export const createCourse = async (req, res) => {
   try {
-    const userId = req.user?._id || req.user?.id;
+    const userId = req.user._id;
 
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    console.log('ðŸ“¥ Received course data:', {
+    console.log('Received course data:', {
       title: req.body.title,
       modules: req.body.modules?.length,
       lessons: req.body.modules?.reduce((total, mod) => total + (mod.lessons?.length || 0), 0)
@@ -458,6 +458,162 @@ export const createCourse = async (req, res) => {
   }
 };
 
+export const deleteModule = async (req, res) => {
+  try {
+    const { id, moduleId } = req.params;
+
+    const course = await Course.findById(id);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    const module = course.modules.id(moduleId);
+    if (!module) {
+      return res.status(404).json({ message: "Module not found" });
+    }
+
+    course.modules.pull(moduleId);
+    await course.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Module deleted successfully",
+      data: course
+    });
+  } catch (error) {
+    console.error("Error deleting module:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete module",
+      error: error.message
+    });
+  }
+};
+
+export const addModule = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { modules } = req.body;
+
+    console.log('addModule called with course ID:', id);
+    console.log('Received modules:', JSON.stringify(modules, null, 2));
+
+    const course = await Course.findById(id);
+    if (!course) {
+      console.error('Course not found with ID:', id);
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    console.log('✅ Course found:', course.title);
+    console.log('📊 Current modules count:', course.modules?.length || 0);
+
+    if (modules && Array.isArray(modules)) {
+      console.log('🔄 Processing', modules.length, 'modules');
+      course.modules = modules.map((module, moduleIndex) => {
+        console.log(`📦 Processing module ${moduleIndex}:`, module.title);
+        console.log(`   - Lessons count: ${module.lessons?.length || 0}`);
+
+        const processedModule = {
+          _id: module._id || new mongoose.Types.ObjectId(),
+          title: module.title || `Module ${moduleIndex + 1}`,
+          description: module.description || '',
+          position: moduleIndex,
+          updatedAt: new Date()
+        };
+
+        if (module._id) {
+          const existingModule = course.modules.id(module._id);
+          if (existingModule) {
+            processedModule.createdAt = existingModule.createdAt;
+          } else {
+            processedModule.createdAt = new Date();
+          }
+        } else {
+          processedModule.createdAt = new Date();
+        }
+
+        if (module.lessons && Array.isArray(module.lessons)) {
+          processedModule.lessons = module.lessons.map((lesson, lessonIndex) => {
+            console.log(`   📝 Processing lesson ${lessonIndex}:`, lesson.title);
+            const processedLesson = {
+              _id: lesson._id,
+              title: lesson.title || `Lesson ${lessonIndex + 1}`,
+              description: lesson.description || '',
+              type: lesson.type || 'video',
+              duration: lesson.duration || '00:00',
+              position: lessonIndex,
+              isFreePreview: Boolean(lesson.isFreePreview),
+              updatedAt: new Date()
+            };
+
+            // Only generate new _id if lesson doesn't have one (new lesson)
+            if (!processedLesson._id) {
+              processedLesson._id = new mongoose.Types.ObjectId();
+            }
+
+            if (lesson._id) {
+              const existingLesson = course.modules
+                .id(module._id)
+                ?.lessons.id(lesson._id);
+              if (existingLesson) {
+                processedLesson.createdAt = existingLesson.createdAt;
+              } else {
+                processedLesson.createdAt = new Date();
+              }
+            } else {
+              processedLesson.createdAt = new Date();
+            }
+
+            if (lesson.type === 'video') {
+              processedLesson.videoUrl = lesson.videoUrl || '';
+              processedLesson.thumbnailUrl = lesson.thumbnailUrl || '';
+              processedLesson.pdfUrl = undefined;
+              processedLesson.content = undefined;
+            } else if (lesson.type === 'pdf') {
+              processedLesson.pdfUrl = lesson.pdfUrl || '';
+              processedLesson.videoUrl = undefined;
+              processedLesson.thumbnailUrl = undefined;
+              processedLesson.content = undefined;
+            } else if (lesson.type === 'text') {
+              processedLesson.content = lesson.content || '';
+              processedLesson.videoUrl = undefined;
+              processedLesson.thumbnailUrl = undefined;
+              processedLesson.pdfUrl = undefined;
+            }
+
+            console.log(`   ✅ Lesson processed:`, processedLesson.title, 'Type:', processedLesson.type);
+            return processedLesson;
+          });
+          console.log(`   ✅ Module ${moduleIndex} processed with ${processedModule.lessons.length} lessons`);
+        } else {
+          processedModule.lessons = [];
+          console.log(`   ⚠️ Module ${moduleIndex} has no lessons`);
+        }
+
+        return processedModule;
+      });
+      console.log('✅ All modules processed');
+    }
+
+    console.log('💾 Saving course to database...');
+    await course.save();
+    console.log('✅ Course saved successfully');
+
+    res.status(200).json({
+      success: true,
+      message: "Course modules updated successfully",
+      data: course
+    });
+  } catch (error) {
+    console.error("Error updating modules:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update modules",
+      error: error.message
+    });
+  }
+};
+
 export const updateCourse = async (req, res) => {
   try {
     const { id } = req.params;
@@ -509,7 +665,7 @@ export const updateCourse = async (req, res) => {
         if (module.lessons && Array.isArray(module.lessons)) {
           processedModule.lessons = module.lessons.map((lesson, lessonIndex) => {
             const processedLesson = {
-              _id: lesson._id || new mongoose.Types.ObjectId(),
+              _id: lesson._id,
               title: lesson.title || `Lesson ${lessonIndex + 1}`,
               description: lesson.description || '',
               type: lesson.type || 'video',
@@ -518,6 +674,11 @@ export const updateCourse = async (req, res) => {
               isFreePreview: Boolean(lesson.isFreePreview),
               updatedAt: new Date()
             };
+
+            // Only generate new _id if lesson doesn't have one (new lesson)
+            if (!processedLesson._id) {
+              processedLesson._id = new mongoose.Types.ObjectId();
+            }
 
             if (lesson._id) {
               const existingLesson = existingCourse.modules
@@ -693,9 +854,11 @@ export const getCourseByIdAdmin = async (req, res) => {
 
 export const deleteCourseAdmin = async (req, res) => {
   try {
+    console.log('🗑️ Delete course request - ID:', req.params.id);
     const course = await Course.findById(req.params.id);
 
     if (!course) {
+      console.log('❌ Course not found with ID:', req.params.id);
       return res.status(404).json({
         success: false,
         message: 'Course not found',
@@ -703,6 +866,7 @@ export const deleteCourseAdmin = async (req, res) => {
     }
 
     await Course.findByIdAndDelete(req.params.id);
+    console.log('✅ Course deleted successfully:', req.params.id);
 
     res.status(200).json({
       success: true,

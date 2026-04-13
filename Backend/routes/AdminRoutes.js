@@ -5,6 +5,8 @@ import isAdmin from '../middlewares/isAdmin.js';
 import {
   createCourse,
   updateCourse,
+  addModule,
+  deleteModule,
   getAllCoursesAdmin,
   deleteCourseAdmin,
   getCourseByIdAdmin,
@@ -37,6 +39,9 @@ router.put('/courses/:id', verifyToken, isAdmin, updateCourse);
 router.delete('/courses/:id', verifyToken, isAdmin, deleteCourseAdmin);
 router.post('/courses/generate-slug', verifyToken, isAdmin, generateCourseSlug);
 router.post('/courses/validate', verifyToken, isAdmin, validateCourse);
+router.post('/courses/:id/modules', verifyToken, isAdmin, addModule);
+router.put('/courses/:id/modules', verifyToken, isAdmin, addModule);
+router.delete('/courses/:id/modules/:moduleId', verifyToken, isAdmin, deleteModule);
 
 router.post('/upload', verifyToken, isAdmin, upload, uploadFile);
 router.post('/upload/thumbnail', verifyToken, isAdmin, upload, uploadThumbnail);

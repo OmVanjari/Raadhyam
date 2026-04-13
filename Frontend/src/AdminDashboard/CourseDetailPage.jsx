@@ -17,12 +17,14 @@ import {
 } from 'lucide-react';
 import ModuleList from './ModuleList';
 
-const CourseDetailPage = ({ 
-  course, 
-  onBack, 
-  onSaveContent, 
-  onOpenModuleForm, 
-  onOpenLessonForm 
+const CourseDetailPage = ({
+  course,
+  onBack,
+  onSaveContent,
+  onOpenModuleForm,
+  onOpenLessonForm,
+  onDeleteModule,
+  onDeleteLesson
 }) => {
   const [courseData, setCourseData] = useState(course);
   const [isVisible, setIsVisible] = useState(false);
@@ -30,6 +32,10 @@ const CourseDetailPage = ({
   useEffect(() => {
     setIsVisible(true);
   }, []);
+
+  useEffect(() => {
+    setCourseData(course);
+  }, [course]);
 
   // Calculate course statistics
   const calculateStats = () => {
@@ -71,27 +77,42 @@ const CourseDetailPage = ({
 
   const handleDeleteModule = async (index) => {
     if (window.confirm('Are you sure you want to delete this module? All lessons will be deleted.')) {
-      const updatedModules = courseData.modules.filter((_, i) => i !== index);
-      await onSaveContent(updatedModules);
-      setCourseData(prev => ({ ...prev, modules: updatedModules }));
+      if (onDeleteModule) {
+        await onDeleteModule(index);
+      } else {
+        // Fallback to old method if onDeleteModule not provided
+        const updatedModules = courseData.modules.filter((_, i) => i !== index);
+        await onSaveContent(updatedModules);
+        setCourseData(prev => ({ ...prev, modules: updatedModules }));
+      }
     }
   };
 
   const handleAddLesson = (moduleIndex) => {
-    onOpenLessonForm({ moduleIndex });
+    const module = courseData.modules[moduleIndex];
+    onOpenLessonForm({ moduleIndex, moduleId: module?._id });
   };
 
   const handleEditLesson = (lesson, moduleIndex, lessonIndex) => {
-    onOpenLessonForm({ ...lesson, moduleIndex, lessonIndex });
-  };
-
-  const handleDeleteLesson = async (moduleIndex, lessonIndex) => {
-    if (window.confirm('Are you sure you want to delete this lesson?')) {
-      const updatedModules = [...courseData.modules];
-      updatedModules[moduleIndex].lessons = updatedModules[moduleIndex].lessons.filter((_, i) => i !== lessonIndex);
-      await onSaveContent(updatedModules);
-      setCourseData(prev => ({ ...prev, modules: updatedModules }));
-    }
+    const module = courseData.modules[moduleIndex];
+    // Extract only the lesson data properties, not metadata like position/index
+    const lessonData = {
+      title: lesson.title,
+      description: lesson.description,
+      type: lesson.type,
+      duration: lesson.duration,
+      videoUrl: lesson.videoUrl,
+      pdfUrl: lesson.pdfUrl,
+      content: lesson.content,
+      thumbnailUrl: lesson.thumbnailUrl,
+      isFreePreview: lesson.isFreePreview,
+      _id: lesson._id,
+      // Explicitly set the indices for editing context
+      moduleIndex,
+      lessonIndex,
+      moduleId: module?._id
+    };
+    onOpenLessonForm(lessonData);
   };
 
   const handleSaveModules = async (updatedModules) => {
@@ -268,10 +289,10 @@ const CourseDetailPage = ({
             modules={courseData.modules || []}
             onAddModule={handleAddModule}
             onEditModule={handleEditModule}
-            onDeleteModule={handleDeleteModule}
+            onDeleteModule={onDeleteModule}
             onAddLesson={handleAddLesson}
             onEditLesson={handleEditLesson}
-            onDeleteLesson={handleDeleteLesson}
+            onDeleteLesson={onDeleteLesson}
             onSaveModules={handleSaveModules}
           />
         </div>

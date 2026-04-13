@@ -18,7 +18,9 @@ export const getUserCourses = async (req, res) => {
       });
     }
 
-    const courses = enrollments.map(enrollment => ({
+    const validEnrollments = enrollments.filter(enrollment => enrollment.course !== null);
+
+    const courses = validEnrollments.map(enrollment => ({
       courseId: enrollment.course._id,
       title: enrollment.course.title,
       slug: enrollment.course.slug,
@@ -125,7 +127,8 @@ export const enrollInCourse = async (req, res) => {
       course: courseId,
       user: userId,
       purchasedPrice: course.isFree ? 0 : course.price,
-      purchaseCurrency: course.currency || 'INR'
+      purchaseCurrency: course.currency || 'INR',
+      isActive: true
     });
 
     await enrollment.save();

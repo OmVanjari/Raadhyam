@@ -62,6 +62,21 @@ const validateCreateCourse = [
     .optional()
     .isBoolean()
     .withMessage('IsFree must be a boolean'),
+
+  body('modules')
+    .optional()
+    .isArray()
+    .withMessage('Modules must be an array'),
+
+  body('modules.*.title')
+    .optional()
+    .notEmpty()
+    .withMessage('Module title is required'),
+
+  body('modules.*.lessons')
+    .optional()
+    .isArray()
+    .withMessage('Module lessons must be an array'),
     
   body('duration')
     .optional()
@@ -138,6 +153,21 @@ const validateUpdateCourse = [
     .optional()
     .isBoolean()
     .withMessage('IsFree must be a boolean'),
+
+  body('modules')
+    .optional()
+    .isArray()
+    .withMessage('Modules must be an array'),
+
+  body('modules.*.title')
+    .optional()
+    .notEmpty()
+    .withMessage('Module title is required'),
+
+  body('modules.*.lessons')
+    .optional()
+    .isArray()
+    .withMessage('Module lessons must be an array'),
     
   body('duration')
     .optional()
