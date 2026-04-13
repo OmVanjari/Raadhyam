@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import UserDashboardLayout from './UserDashboardLayout';
 import UserDashboardHome from './UserDashboardHome';
 import UserCoursesPage from './UserCoursesPage';
+import UserEnrolledCoursesPage from './UserEnrolledCoursesPage';
 import UserNotesPage from './UserNotesPage';
 import UserProfilePage from './UserProfilePage';
 
@@ -10,11 +11,12 @@ const UserMain = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'home':    return <UserDashboardHome setActiveTab={setActiveTab} />;
-      case 'courses': return <UserCoursesPage />;
-      case 'notes':   return <UserNotesPage />;
-      case 'profile': return <UserProfilePage />;
-      default:        return <UserDashboardHome setActiveTab={setActiveTab} />;
+      case 'home':     return <UserDashboardHome setActiveTab={setActiveTab} />;
+      case 'enrolled': return <UserEnrolledCoursesPage setActiveTab={setActiveTab} />;
+      case 'explore':  return <UserCoursesPage />;
+      case 'notes':    return <UserNotesPage />;
+      case 'profile':  return <UserProfilePage />;
+      default:         return <UserDashboardHome setActiveTab={setActiveTab} />;
     }
   };
 

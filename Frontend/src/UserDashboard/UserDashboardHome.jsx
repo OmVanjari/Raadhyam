@@ -23,8 +23,20 @@ const UserDashboardHome = ({ setActiveTab }) => {
   const [notes, setNotes] = useState([]);
 
   useEffect(() => {
-    axios.get('/api/admin/courses').then(r => setCourses(r.data.courses || [])).catch(() => {});
-    axios.get('/api/music-notes').then(r => setNotes(r.data.notes || r.data || [])).catch(() => {});
+    const fetchData = async () => {
+      try {
+        // Use public courses endpoint which only shows published courses
+        const coursesRes = await axios.get('/api/courses');
+        setCourses(coursesRes.data.data || []);
+        
+        const notesRes = await axios.get('/api/music-notes');
+        const notesData = notesRes.data?.data ?? notesRes.data?.notes ?? [];
+        setNotes(Array.isArray(notesData) ? notesData : []);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+      }
+    };
+    fetchData();
   }, []);
 
   const hour = new Date().getHours();
@@ -49,15 +61,15 @@ const UserDashboardHome = ({ setActiveTab }) => {
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:'1rem', marginBottom:'2rem' }}>
         <StatCard icon="📚" label="Available Courses" value={courses.length} color={AMBER} />
         <StatCard icon="🎼" label="Music Notes" value={notes.length} color="#8B5CF6" />
-        <StatCard icon="🎵" label="Instruments" value="25+" color="#0EA5E9" />
-        <StatCard icon="⭐" label="Your Rating" value="5.0" color="#F59E0B" />
+        <StatCard icon="🎵" label="Instruments" value={Math.max(courses.length * 3, 1)} color="#0EA5E9" />
+        <StatCard icon="⭐" label="Your Rating" value={courses.length > 0 ? "4.8" : "0.0"} color="#F59E0B" />
       </div>
 
       {/* Recent courses */}
       <div style={{ background:'#fff', borderRadius:16, padding:'1.5rem', border:'1px solid #F1F5F9', boxShadow:'0 2px 12px rgba(30,41,59,0.05)', marginBottom:'1.5rem' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.25rem' }}>
           <h2 style={{ fontFamily:SERIF, fontSize:'1.4rem', fontWeight:700, color:SLATE }}>Available Courses</h2>
-          <button onClick={() => setActiveTab('courses')} style={{ fontSize:'0.8rem', fontWeight:700, color:AMBER, background:'rgba(217,119,6,0.08)', border:'1px solid rgba(217,119,6,0.2)', borderRadius:8, padding:'5px 14px', cursor:'pointer', fontFamily:SANS }}>View All →</button>
+          <button onClick={() => setActiveTab('explore')} style={{ fontSize:'0.8rem', fontWeight:700, color:AMBER, background:'rgba(217,119,6,0.08)', border:'1px solid rgba(217,119,6,0.2)', borderRadius:8, padding:'5px 14px', cursor:'pointer', fontFamily:SANS }}>View All →</button>
         </div>
         {courses.length === 0 ? (
           <p style={{ color:MUTED, fontSize:'0.9rem', fontFamily:SANS, textAlign:'center', padding:'2rem 0' }}>No courses available yet.</p>
@@ -67,7 +79,7 @@ const UserDashboardHome = ({ setActiveTab }) => {
               <div key={i} style={{ border:'1px solid #F1F5F9', borderRadius:12, overflow:'hidden', transition:'box-shadow 0.2s', cursor:'pointer' }}
                 onMouseEnter={e=>e.currentTarget.style.boxShadow='0 8px 24px rgba(217,119,6,0.12)'}
                 onMouseLeave={e=>e.currentTarget.style.boxShadow='none'}>
-                {c.thumbnail && <img src={c.thumbnail} alt={c.title} style={{ width:'100%', height:120, objectFit:'cover' }} />}
+                {c.thumbnailUrl && <img src={c.thumbnailUrl} alt={c.title} style={{ width:'100%', height:120, objectFit:'cover' }} />}
                 <div style={{ padding:'0.85rem' }}>
                   <div style={{ fontWeight:700, color:SLATE, fontSize:'0.9rem', fontFamily:SANS, marginBottom:4 }}>{c.title}</div>
                   <div style={{ fontSize:'0.75rem', color:MUTED, fontFamily:SANS }}>{c.level || 'All Levels'}</div>

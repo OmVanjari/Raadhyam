@@ -108,10 +108,23 @@ const CourseSchema = new Schema({
     views: { type: Number, default: 0 },
     completions: { type: Number, default: 0 }
   },
-  createdBy: { type: Schema.Types.ObjectId, ref: "Admin" },
+  createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
+
+// Indexes for efficient querying
+CourseSchema.index({ slug: 1 });
+CourseSchema.index({ category: 1 });
+CourseSchema.index({ "instructor.name": 1 });
+CourseSchema.index({ createdAt: -1 });
+CourseSchema.index({ "stats.rating": -1 });
+CourseSchema.index({ "stats.enrolledStudents": -1 });
+CourseSchema.index({ "publish.status": 1 });
+CourseSchema.index({ visibility: 1 });
+CourseSchema.index({ level: 1 });
+CourseSchema.index({ tags: 1 });
+CourseSchema.index({ createdBy: 1 });
 
 CourseSchema.pre("validate", function (next) {
   if (!this.slug && this.title)

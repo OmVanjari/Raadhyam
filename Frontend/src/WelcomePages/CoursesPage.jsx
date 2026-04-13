@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import { Music, CheckCircle, X, Clock, BarChart3, ArrowRight, Sparkles } from 'lucide-react';
 import NavBarpage from './NavBarpage';
 import FooterPage from './FooterPage';
@@ -23,145 +24,6 @@ function useInView(threshold = 0.15) {
 
   return { ref, inView };
 }
-
-const courses = [
-  {
-    name: 'Vocal Training',
-    icon: '🎤',
-    image: 'https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=600&auto=format&fit=crop&q=80',
-    tag: 'Most Popular',
-    level: 'Beginner to Advanced',
-    duration: '3 months+',
-    desc: 'Indian Classical, Bollywood and Western vocals with voice modulation and stage performance.',
-    details: [
-      'Hindustani and Carnatic classical foundations',
-      'Bollywood and Western vocal styles',
-      'Breathing techniques and voice modulation',
-      'Sur, taal and raga training',
-      'Stage performance and mic technique',
-      'Recording and playback sessions',
-    ],
-  },
-  {
-    name: 'Guitar',
-    icon: '🎸',
-    image: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=600&auto=format&fit=crop&q=80',
-    tag: 'Trending',
-    level: 'Beginner to Pro',
-    duration: '4 months+',
-    desc: 'Acoustic and electric guitar with chords, fingerpicking, scales, and lead techniques.',
-    details: [
-      'Basic to advanced chord progressions',
-      'Fingerpicking and strumming patterns',
-      'Lead guitar and soloing techniques',
-      'Music reading and tablature',
-      'Bollywood, classical and Western styles',
-      'Live performance preparation',
-    ],
-  },
-  {
-    name: 'Keyboard and Piano',
-    icon: '🎹',
-    image: 'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=600&auto=format&fit=crop&q=80',
-    tag: 'Classic',
-    level: 'All Levels',
-    duration: '3 months+',
-    desc: 'Classical and contemporary piano with chords, scales, sight-reading and composition.',
-    details: [
-      'Western classical piano foundations',
-      'Chords, scales and arpeggios',
-      'Sight-reading and music notation',
-      'Bollywood and film music arrangements',
-      'Improvisation and composition',
-      'Trinity and ABRSM exam preparation',
-    ],
-  },
-  {
-    name: 'Tabla and Percussion',
-    icon: '🥁',
-    image: 'https://images.unsplash.com/photo-1519892300165-cb5542fb47c7?w=600&auto=format&fit=crop&q=80',
-    tag: 'Traditional',
-    level: 'Beginner to Advanced',
-    duration: '4 months+',
-    desc: 'Tabla, drums, cajon, and dholak with rhythm cycles, hand techniques and coordination.',
-    details: [
-      'Tabla bols and taal cycles',
-      'Western drum kit fundamentals',
-      'Cajon and hand percussion',
-      'Dholak for folk and devotional music',
-      'Rhythm coordination exercises',
-      'Ensemble and accompaniment skills',
-    ],
-  },
-  {
-    name: 'Violin',
-    icon: '🎻',
-    image: 'https://images.unsplash.com/photo-1465821185615-20b3c2fbf41b?w=600&auto=format&fit=crop&q=80',
-    tag: 'Classical',
-    level: 'Beginner to Advanced',
-    duration: '5 months+',
-    desc: 'Indian classical and Western violin with bowing, ragas, scales and performance.',
-    details: [
-      'Proper posture and bowing technique',
-      'Indian classical ragas on violin',
-      'Western scales and classical pieces',
-      'Intonation and ear training',
-      'Film and fusion violin styles',
-      'Stage and orchestra performance',
-    ],
-  },
-  {
-    name: 'Flute',
-    icon: '🪈',
-    image: 'https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=600&auto=format&fit=crop&q=80',
-    tag: 'Soulful',
-    level: 'Beginner to Advanced',
-    duration: '3 months+',
-    desc: 'Bansuri and Western flute with breath control, ragas, notation and melodies.',
-    details: [
-      'Breath control and embouchure',
-      'Bansuri for Indian classical music',
-      'Western flute scales and pieces',
-      'Raga-based improvisation',
-      'Devotional and folk music styles',
-      'Performance and recording techniques',
-    ],
-  },
-  {
-    name: 'Harmonium',
-    icon: '🪗',
-    image: 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&auto=format&fit=crop&q=80',
-    tag: 'Devotional',
-    level: 'All Levels',
-    duration: '2 months+',
-    desc: 'Harmonium for bhajans, classical and devotional music with sur and taal.',
-    details: [
-      'Sur and swara fundamentals',
-      'Bhajan and kirtan accompaniment',
-      'Classical raga-based playing',
-      'Left hand bellows technique',
-      'Taal and rhythm coordination',
-      'Devotional and stage performance',
-    ],
-  },
-  {
-    name: 'Music Theory',
-    icon: '🎼',
-    image: 'https://images.unsplash.com/photo-1513883049090-d0b7439799bf?w=600&auto=format&fit=crop&q=80',
-    tag: 'Foundation',
-    level: 'All Levels',
-    duration: '2 months+',
-    desc: 'Notation, harmony, rhythm, scales, chords and composition in a clear structure.',
-    details: [
-      'Music notation and sight-reading',
-      'Scales, modes and intervals',
-      'Chord theory and harmony',
-      'Rhythm and time signatures',
-      'Composition and arrangement basics',
-      'Exam prep: Trinity, ABRSM, Gandharva',
-    ],
-  },
-];
 
 const GlobalStyles = () => (
   <style>{`
@@ -325,12 +187,24 @@ const CourseCard = ({ course, delay, onOpen }) => {
   const { ref, inView } = useInView(0.12);
   const [hovered, setHovered] = useState(false);
 
+  // Map API data to display format with fallback icons and images
+  const courseData = {
+    name: course.title || course.name || 'Course',
+    icon: course.icon || '🎵',
+    image: course.thumbnail || course.thumbnailUrl || course.image || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&auto=format&fit=crop&q=80',
+    tag: course.category || course.tag || 'Course',
+    level: course.level || 'All Levels',
+    duration: course.duration || 'Self-paced',
+    desc: course.description || course.desc || 'Learn this exciting course.',
+    details: course.modules?.map(m => m.title) || course.details || ['Course content available']
+  };
+
   return (
     <div
       ref={ref}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={() => onOpen(course)}
+      onClick={() => onOpen(courseData)}
       className="cp-card overflow-hidden cursor-pointer group"
       style={{
         opacity: inView ? 1 : 0,
@@ -342,8 +216,8 @@ const CourseCard = ({ course, delay, onOpen }) => {
       {/* Image Container */}
       <div className="relative h-56 overflow-hidden bg-gradient-to-br from-slate-100 to-slate-50">
         <img
-          src={course.image}
-          alt={course.name}
+          src={courseData.image}
+          alt={courseData.name}
           className="w-full h-full object-cover"
           style={{
             transform: hovered ? 'scale(1.12)' : 'scale(1)',
@@ -362,20 +236,20 @@ const CourseCard = ({ course, delay, onOpen }) => {
             <Sparkles className="w-3.5 h-3.5 group-hover:animate-spin" style={{
               animationDuration: '2s',
             }} />
-            {course.tag}
+            {courseData.tag}
           </span>
         </div>
 
         {/* Icon Circle */}
         <div className="absolute right-4 bottom-4 w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm border border-white/50 flex items-center justify-center text-2xl shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300">
-          {course.icon}
+          {courseData.icon}
         </div>
       </div>
 
       {/* Content */}
       <div className="p-6">
         <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-orange-500 group-hover:to-amber-500 group-hover:bg-clip-text transition-all duration-300">
-          {course.name}
+          {courseData.name}
         </h3>
 
         {/* Meta Tags */}
@@ -386,7 +260,7 @@ const CourseCard = ({ course, delay, onOpen }) => {
               animation: hovered ? 'slideInUp 0.3s ease 0.05s both' : 'none',
             }}
           >
-            <BarChart3 className="w-3 h-3" /> {course.level}
+            <BarChart3 className="w-3 h-3" /> {courseData.level}
           </span>
           <span 
             className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100/60 text-slate-600 border border-slate-200/50 backdrop-blur group-hover:bg-slate-100 group-hover:shadow-md transition-all duration-300"
@@ -394,13 +268,13 @@ const CourseCard = ({ course, delay, onOpen }) => {
               animation: hovered ? 'slideInUp 0.3s ease 0.1s both' : 'none',
             }}
           >
-            <Clock className="w-3 h-3" /> {course.duration}
+            <Clock className="w-3 h-3" /> {courseData.duration}
           </span>
         </div>
 
         {/* Description */}
         <p className="text-slate-600 text-sm leading-relaxed mb-4 line-clamp-3 group-hover:text-slate-700 transition-colors duration-300">
-          {course.desc}
+          {courseData.desc}
         </p>
 
         {/* Footer CTA */}
@@ -505,7 +379,7 @@ const CourseModal = ({ course, onClose }) => {
             </h4>
             <div className="grid sm:grid-cols-2 gap-3">
               {course.details.map((detail, idx) => (
-                <div key={detail} className="flex items-start gap-3 text-sm text-slate-700 p-2 rounded-lg hover:bg-white/40 transition-colors" style={{
+                <div key={idx} className="flex items-start gap-3 text-sm text-slate-700 p-2 rounded-lg hover:bg-white/40 transition-colors" style={{
                   animation: `revealUp 0.5s ease ${100 + idx * 50}ms both`,
                 }}>
                   <CheckCircle className="w-5 h-5 mt-0.5 text-orange-500 flex-shrink-0" />
@@ -537,6 +411,46 @@ const CourseModal = ({ course, onClose }) => {
 
 const CoursesPage = () => {
   const [selected, setSelected] = useState(null);
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('/api/courses');
+      // Handle both array response and { courses: [] } or { data: [] } response
+      const coursesData = Array.isArray(response.data) 
+        ? response.data 
+        : (response.data.courses || response.data.data || []);
+      setCourses(coursesData);
+    } catch (err) {
+      console.error('Error fetching courses:', err);
+      setCourses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // If loading, show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 overflow-x-hidden cp-shell">
+        <GlobalStyles />
+        <NavBarpage />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-slate-600 font-medium">Loading courses...</p>
+          </div>
+        </div>
+        <FooterPage />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 overflow-x-hidden cp-shell">
@@ -595,12 +509,22 @@ const CoursesPage = () => {
       {/* Courses Grid Section */}
       <section className="relative mt-0 z-20 px-4 pt-16 sm:pt-20 pb-16 sm:pb-20">
         <div className="container mx-auto max-w-7xl">
-          {/* Grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {courses.map((course, i) => (
-              <CourseCard key={course.name} course={course} delay={i * 70} onOpen={setSelected} />
-            ))}
-          </div>
+          {courses.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">🎵</div>
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">No courses available</h3>
+              <p className="text-slate-600">Check back soon for new courses!</p>
+            </div>
+          ) : (
+            <>
+              {/* Grid */}
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {courses.map((course, i) => (
+                  <CourseCard key={course._id || course.id || i} course={course} delay={i * 70} onOpen={setSelected} />
+                ))}
+              </div>
+            </>
+          )}
 
           {/* CTA Section */}
           <div className="mt-16 text-center">

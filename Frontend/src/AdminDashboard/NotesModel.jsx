@@ -15,7 +15,7 @@ const NoteFormModal = ({
 
   // Get axios config with auth headers
   const getAxiosConfig = () => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     return {
       headers: {
         'Authorization': token ? `Bearer ${token}` : '',
@@ -36,7 +36,7 @@ const NoteFormModal = ({
 
       const response = await axios.post('/api/admin/upload/thumbnail', formData, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         }
       });
 

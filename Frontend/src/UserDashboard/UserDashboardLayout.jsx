@@ -1,145 +1,287 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Menu, X, LogOut, User, Home, BookOpen, FileText, Music } from 'lucide-react';
+import { Menu, X, LogOut, User, Home, BookOpen, FileText, Music, Sparkles, GraduationCap } from 'lucide-react';
 
 const UserDashboardLayout = ({ children, activeTab, setActiveTab }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const userData = (() => {
     try { return JSON.parse(localStorage.getItem('userData') || '{}'); } catch { return {}; }
   })();
 
-  const nav = [
-    { id: 'home',    name: 'Dashboard',    icon: Home },
-    { id: 'courses', name: 'My Courses',   icon: BookOpen },
-    { id: 'notes',   name: 'Music Notes',  icon: FileText },
-    { id: 'profile', name: 'My Profile',   icon: User },
+  const navigation = [
+    { name: 'Dashboard',        icon: Home,           id: 'home' },
+    { name: 'My Courses',       icon: GraduationCap,  id: 'enrolled' },
+    { name: 'Explore Courses',  icon: BookOpen,       id: 'explore' },
+    { name: 'Music Notes',      icon: FileText,       id: 'notes' },
+    { name: 'My Profile',       icon: User,           id: 'profile' },
   ];
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
     localStorage.removeItem('userData');
     navigate('/login');
   };
 
-  const SidebarContent = ({ mobile = false }) => (
-    <>
-      <div className="border-b border-amber-600/20 px-5 pb-4 pt-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-slate-900 shadow-lg shadow-amber-500/30">
-            <Music className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-lg font-bold text-white">Raadhyam</p>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-amber-300">Student Dashboard</p>
-          </div>
-        </div>
-      </div>
-
-      <nav className="flex-1 px-3 pb-4 pt-4">
-        <p className="px-3 pb-2 text-[11px] uppercase tracking-[0.18em] text-slate-400">Navigation</p>
-        <div className="space-y-1.5">
-          {nav.map((item) => {
-            const active = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setActiveTab(item.id);
-                  if (mobile) setSidebarOpen(false);
-                }}
-                className={`group w-full rounded-xl px-3 py-2.5 text-left text-sm font-medium transition ${
-                  active
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-900 shadow-md shadow-amber-500/35'
-                    : 'text-slate-300 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                <span className="flex items-center gap-2.5">
-                  <item.icon className={`h-4.5 w-4.5 ${active ? 'text-slate-900' : 'text-slate-400 group-hover:text-amber-300'}`} />
-                  {item.name}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-
-      <div className="px-3 pb-3">
-        <button
-          onClick={() => navigate('/')}
-          className="w-full rounded-xl border border-amber-500/25 bg-white/5 px-3 py-2.5 text-left text-sm font-medium text-slate-200 transition hover:border-amber-400/50 hover:bg-white/10"
-        >
-          <span className="flex items-center gap-2">
-            <Home size={16} /> Back to Website
-          </span>
-        </button>
-      </div>
-
-      <div className="m-3 rounded-xl border border-white/10 bg-white/5 p-3">
-        <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 to-amber-700 text-sm font-bold text-slate-900">
-          {(userData.name || userData.email || 'U')[0].toUpperCase()}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-semibold text-slate-100">{userData.name || 'Student'}</div>
-          <div className="truncate text-xs text-slate-400">{userData.email || ''}</div>
-        </div>
-        <button
-          onClick={handleLogout}
-          title="Logout"
-          className="rounded-lg p-2 text-slate-400 transition hover:bg-red-500/15 hover:text-red-300"
-        >
-          <LogOut size={16} />
-        </button>
-        </div>
-      </div>
-    </>
-  );
+  const handleGoHome = () => {
+    navigate('/');
+  };
 
   return (
-    <div className="min-h-screen bg-slate-100" style={{ display:'flex' }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;600;700&display=swap');`}</style>
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_14%_24%,rgba(217,119,6,0.16),transparent_30%),radial-gradient(circle_at_86%_10%,rgba(15,23,42,0.12),transparent_28%)]" />
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-amber-50/30 to-amber-50/20 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-amber-400/20 to-orange-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }}></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-amber-400/20 to-yellow-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '6s', animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-amber-400/10 to-amber-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '5s', animationDelay: '2s' }}></div>
+      </div>
 
-      {/* Mobile overlay */}
+      <style>{`
+        @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&display=swap");
+        * { font-family: "Manrope", system-ui, sans-serif; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInLeft { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes shimmer { 0% { background-position: 200% center; } 50% { background-position: -200% center; } 100% { background-position: 200% center; } }
+        
+        .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+        .animate-fade-in-down { animation: fadeInDown 0.6s ease-out both; }
+        .animate-fade-in-up { animation: fadeInUp 0.6s ease-out both; }
+        .animate-slide-in-left { animation: slideInLeft 0.3s ease-out; }
+        .animate-shimmer { animation: shimmer 3s linear infinite; background-size: 200% auto; }
+        
+        .user-sidebar { position: fixed; inset: 0; z-index: 40; width: 18rem; }
+        .user-main { flex: 1; }
+        .user-topbar { position: sticky; top: 0; z-index: 30; }
+        
+        @media (max-width: 768px) {
+          .user-sidebar { display: none !important; }
+          .user-main { margin-left: 0 !important; }
+          .user-topbar { display: flex !important; }
+        }
+      `}</style>
+
+      {/* Mobile Sidebar */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-50 flex md:hidden">
-          <div className="fixed inset-0 bg-slate-950/55 backdrop-blur-[1px]" onClick={() => setSidebarOpen(false)} />
-          <div className="relative flex h-full w-full max-w-[280px] flex-col bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-2xl">
-            <button className="absolute right-2 top-2 rounded-full p-2 text-slate-300 transition hover:bg-white/10 hover:text-white" onClick={() => setSidebarOpen(false)}><X size={20} /></button>
-            <SidebarContent mobile />
+        <div className="fixed inset-0 flex z-50 md:hidden">
+          <div className="fixed inset-0 bg-gray-900/80 backdrop-blur-md transition-opacity animate-fade-in" onClick={() => setSidebarOpen(false)}></div>
+          
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white shadow-2xl animate-slide-in-left">
+            <div className="absolute top-0 right-0 -mr-12 pt-2">
+              <button
+                className="ml-1 flex items-center justify-center h-10 w-10 rounded-full bg-white/10 backdrop-blur-sm transition-all hover:bg-white/20 hover:rotate-90 duration-300"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <X className="h-6 w-6 text-white" />
+              </button>
+            </div>
+            
+            <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
+              {/* Logo with animation */}
+              <div className="flex-shrink-0 flex items-center px-4 mb-6 animate-fade-in-down">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-amber-700 rounded-xl blur-md opacity-50 animate-pulse"></div>
+                  <div className="relative w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <Music className="h-6 w-6 text-white animate-bounce" style={{ animationDuration: '2s' }} />
+                  </div>
+                </div>
+                <div className="ml-3">
+                  <span className="text-xl font-bold bg-gradient-to-r from-amber-500 via-amber-600 to-amber-600 bg-clip-text text-transparent animate-shimmer" style={{ backgroundSize: '200% auto' }}>Raadhyam</span>
+                  <p className="text-xs text-gray-500 font-medium flex items-center">
+                    <Sparkles size={10} className="mr-1 text-amber-500" />
+                    Student Portal
+                  </p>
+                </div>
+              </div>
+              
+              {/* Back to Home Button */}
+              <div className="px-4 mb-4 animate-fade-in-down" style={{ animationDelay: '0.1s' }}>
+                <button
+                  onClick={handleGoHome}
+                  className="w-full flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:text-amber-600 bg-gradient-to-r from-gray-50 to-amber-50/30 hover:from-amber-50 hover:to-amber-100 rounded-xl transition-all duration-300 group shadow-sm hover:shadow-md"
+                >
+                  <Home size={18} className="mr-3 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300" />
+                  Back to Home
+                </button>
+              </div>
+
+              {/* Navigation */}
+              <nav className="mt-2 px-3 space-y-2">
+                {navigation.map((item, index) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setSidebarOpen(false);
+                    }}
+                    className={`${
+                      activeTab === item.id
+                        ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/40 scale-105'
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-100 hover:to-amber-50'
+                    } group flex items-center px-4 py-3 text-base font-medium rounded-xl w-full text-left transition-all duration-300 animate-fade-in-down`}
+                    style={{ animationDelay: `${0.2 + index * 0.1}s` }}
+                  >
+                    <item.icon
+                      className={`${
+                        activeTab === item.id ? 'text-white' : 'text-gray-400 group-hover:text-amber-600'
+                      } mr-3 flex-shrink-0 h-5 w-5 transition-all duration-300 group-hover:scale-110 ${activeTab === item.id ? 'animate-pulse' : ''}`}
+                    />
+                    {item.name}
+                  </button>
+                ))}
+              </nav>
+            </div>
+            
+            {/* User Profile */}
+            <div className="flex-shrink-0 border-t border-gray-200 p-4 bg-gradient-to-r from-gray-50 to-amber-50/30 animate-fade-in-up">
+              <div className="flex items-center w-full justify-between">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0 relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-amber-700 rounded-full blur-sm opacity-50 animate-pulse"></div>
+                    <div className="relative h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-md font-bold text-white text-sm">
+                      {(userData.name || userData.email || 'U')[0].toUpperCase()}
+                    </div>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-semibold text-gray-900">{userData.name || 'Student'}</p>
+                    <p className="text-xs font-medium text-gray-500">{userData.email || 'student@raadhyam.com'}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={handleLogout}
+                  className="text-gray-400 hover:text-amber-600 ml-2 p-2 hover:bg-amber-50 rounded-lg transition-all duration-300 hover:rotate-12 hover:scale-110"
+                  title="Logout"
+                >
+                  <LogOut size={18} />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Desktop sidebar */}
-      <div className="user-sidebar fixed inset-y-0 left-0 hidden w-72 flex-col md:flex">
-        <div className="m-3 flex h-[calc(100vh-1.5rem)] flex-col rounded-3xl border border-white/10 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 shadow-2xl shadow-slate-900/25">
-        <SidebarContent />
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 z-40">
+        <div className="flex-1 flex flex-col min-h-0 bg-white/80 backdrop-blur-xl shadow-2xl border-r border-gray-200/50">
+          <div className="flex-1 flex flex-col pt-6 pb-4 overflow-y-auto">
+            {/* Logo with animation */}
+            <div className="flex items-center flex-shrink-0 px-6 mb-8 animate-fade-in-down">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-amber-700 rounded-xl blur-md opacity-50 animate-pulse"></div>
+                <div className="relative w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-700 rounded-xl flex items-center justify-center shadow-lg">
+                  <Music className="h-7 w-7 text-white animate-bounce" style={{ animationDuration: '2s' }} />
+                </div>
+              </div>
+              <div className="ml-3">
+                <span className="text-2xl font-bold bg-gradient-to-r from-amber-500 via-amber-600 to-amber-600 bg-clip-text text-transparent animate-shimmer" style={{ backgroundSize: '200% auto' }}>Raadhyam</span>
+                <p className="text-xs text-gray-500 font-medium flex items-center">
+                  <Sparkles size={10} className="mr-1 text-amber-500 animate-pulse" />
+                  Student Portal
+                </p>
+              </div>
+            </div>
+
+            {/* Back to Home Button */}
+            <div className="px-4 mb-6 animate-fade-in-down" style={{ animationDelay: '0.1s' }}>
+              <button
+                onClick={handleGoHome}
+                className="w-full flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:text-amber-600 bg-gradient-to-r from-gray-50 to-amber-50/30 hover:from-amber-50 hover:to-amber-100 rounded-xl transition-all duration-300 group shadow-sm hover:shadow-md"
+              >
+                <Home size={18} className="mr-3 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300" />
+                Back to Home
+              </button>
+            </div>
+
+            {/* Navigation */}
+            <nav className="mt-2 flex-1 px-4 space-y-2">
+              {navigation.map((item, index) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`${
+                    activeTab === item.id
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/40 scale-105'
+                      : 'text-gray-700 hover:bg-gradient-to-r hover:from-gray-100 hover:to-amber-50'
+                  } group flex items-center px-4 py-3 text-sm font-medium rounded-xl w-full text-left transition-all duration-300 animate-fade-in-down`}
+                  style={{ animationDelay: `${0.2 + index * 0.1}s` }}
+                >
+                  <item.icon
+                    className={`${
+                      activeTab === item.id ? 'text-white' : 'text-gray-400 group-hover:text-amber-600'
+                    } mr-3 flex-shrink-0 h-5 w-5 transition-all duration-300 group-hover:scale-110 ${activeTab === item.id ? 'animate-pulse' : ''}`}
+                  />
+                  {item.name}
+                </button>
+              ))}
+            </nav>
+          </div>
+          
+          {/* User Profile */}
+          <div className="flex-shrink-0 border-t border-gray-200 p-4 bg-gradient-to-r from-gray-50 to-amber-50/30 animate-fade-in-up">
+            <div className="flex items-center w-full">
+              <div className="flex-shrink-0 relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-amber-700 rounded-full blur-sm opacity-50 animate-pulse"></div>
+                <div className="relative h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-md font-bold text-white text-sm">
+                  {(userData.name || userData.email || 'U')[0].toUpperCase()}
+                </div>
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="text-sm font-semibold text-gray-900">{userData.name || 'Student'}</p>
+                <p className="text-xs font-medium text-gray-500">{userData.email || 'student@raadhyam.com'}</p>
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="ml-2 text-gray-400 hover:text-amber-600 p-2 hover:bg-amber-50 rounded-lg transition-all duration-300 hover:rotate-12 hover:scale-110"
+                title="Logout"
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Main */}
-      <div className="user-main flex min-h-screen flex-1 flex-col md:ml-72">
-        {/* Mobile topbar */}
-        <div className="user-topbar sticky top-0 z-30 hidden items-center gap-3 border-b border-amber-200/60 bg-white/75 px-3 py-3 backdrop-blur">
-          <button onClick={() => setSidebarOpen(true)} className="rounded-lg p-2 text-slate-700 transition hover:bg-amber-50"><Menu size={22} /></button>
-          <span className="text-base font-bold text-slate-900">Raadhyam <span className="text-amber-700">Portal</span></span>
+      {/* Main Content */}
+      <div className="md:pl-72 flex flex-col flex-1 relative z-10">
+        {/* Mobile Header */}
+        <div className={`sticky top-0 z-30 md:hidden transition-all duration-300 ${
+          scrolled 
+            ? 'bg-white/90 backdrop-blur-xl shadow-lg' 
+            : 'bg-white/80 backdrop-blur-lg'
+        } border-b border-gray-200/50`}>
+          <div className="flex items-center justify-between px-4 py-3">
+            <button
+              className="inline-flex items-center justify-center h-10 w-10 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gradient-to-r hover:from-gray-100 hover:to-amber-50 transition-all duration-300 hover:scale-110"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+            <div className="flex items-center animate-fade-in">
+              <span className="text-base font-bold text-gray-900">Raadhyam <span className="text-amber-600">Portal</span></span>
+            </div>
+            <div className="w-10"></div>
+          </div>
         </div>
 
-        <main className="flex-1 p-4 sm:p-6 md:p-8">
-          {children}
+        {/* Main Content Area */}
+        <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
         </main>
       </div>
-
-      <style>{`
-        @media(max-width:768px){
-          .user-sidebar{ display:none !important; }
-          .user-main{ margin-left:0 !important; }
-          .user-topbar{ display:flex !important; }
-        }
-      `}</style>
     </div>
   );
 };

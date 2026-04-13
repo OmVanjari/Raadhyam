@@ -45,6 +45,7 @@ desktop.ini
 Backend/uploads/
 *.mp4
 !Frontend/public/K_Musical_Instrument_Showcase_Video.mp4
+!Frontend/public/Video_of_Slow_Moving_Waves.mp4
 *.mp3
 *.wav
 
