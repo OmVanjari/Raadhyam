@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { Music, CheckCircle, X, Clock, BarChart3, ArrowRight, Sparkles } from 'lucide-react';
+import { Music, CheckCircle, X, Clock, BarChart3, ArrowRight, Sparkles, BookOpen, Users, Star } from 'lucide-react';
 import NavBarpage from './NavBarpage';
 import FooterPage from './FooterPage';
 
@@ -191,12 +191,11 @@ const CourseCard = ({ course, delay, onOpen }) => {
   const courseData = {
     name: course.title || course.name || 'Course',
     icon: course.icon || '🎵',
-    image: course.thumbnail || course.thumbnailUrl || course.image || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&auto=format&fit=crop&q=80',
+    image: course.thumbnailUrl || course.thumbnail || course.image || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&auto=format&fit=crop&q=80',
     tag: course.category || course.tag || 'Course',
     level: course.level || 'All Levels',
     duration: course.duration || 'Self-paced',
-    desc: course.description || course.desc || 'Learn this exciting course.',
-    details: course.modules?.map(m => m.title) || course.details || ['Course content available']
+    desc: course.shortDescription || course.description || course.desc || 'Learn this exciting course.',
   };
 
   return (
@@ -204,7 +203,7 @@ const CourseCard = ({ course, delay, onOpen }) => {
       ref={ref}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={() => onOpen(courseData)}
+      onClick={() => onOpen(course)}
       className="cp-card overflow-hidden cursor-pointer group"
       style={{
         opacity: inView ? 1 : 0,
@@ -293,7 +292,12 @@ const CourseCard = ({ course, delay, onOpen }) => {
   );
 };
 
-const CourseModal = ({ course, onClose }) => {
+const extractYouTubeVideoId = (url) => {
+  if (!url) return null;
+  return url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/)?.[1] || null;
+};
+
+const CourseModal = ({ course, onClose, onEnroll, enrolled, enrolling, isLoggedIn }) => {
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     const onKey = (e) => {
@@ -305,6 +309,34 @@ const CourseModal = ({ course, onClose }) => {
       window.removeEventListener('keydown', onKey);
     };
   }, [onClose]);
+
+  const courseData = {
+    id: course._id,
+    title: course.title || course.name || 'Course',
+    subtitle: course.subtitle,
+    icon: course.icon || '🎵',
+    image: course.thumbnailUrl || course.thumbnail || course.image || 'https://images.unsplash.com/photo-1511379938547-c1f69419868d?w=600&auto=format&fit=crop&q=80',
+    category: course.category || course.tag || 'Course',
+    level: course.level || 'All Levels',
+    language: course.language,
+    duration: course.duration || 'Self-paced',
+    description: course.shortDescription || course.description || 'Learn this exciting course.',
+    fullDescription: course.description,
+    details: (course.whatYouWillLearn && course.whatYouWillLearn.length > 0)
+      ? course.whatYouWillLearn
+      : (course.modules?.map((m) => m.title).filter(Boolean) || ['Course content available']),
+    prerequisites: course.prerequisites || [],
+    modulesCount: course.modules?.length || 0,
+    students: course.stats?.enrolledStudents || 0,
+    rating: course.stats?.rating || 0,
+    isFree: Boolean(course.isFree),
+    price: course.price || 0,
+    offerPrice: course.offerPrice,
+    instructor: course.instructor,
+    promoVideoUrl: course.promoVideoUrl,
+  };
+
+  const videoId = extractYouTubeVideoId(courseData.promoVideoUrl);
 
   return (
     <div
@@ -319,8 +351,8 @@ const CourseModal = ({ course, onClose }) => {
         }}
       >
         {/* Hero Image Section */}
-        <div className="relative h-80 overflow-hidden bg-gradient-to-br from-slate-100 to-slate-50">
-          <img src={course.image} alt={course.name} className="w-full h-full object-cover" />
+        <div className="relative h-80 overflow-hidden bg-slate-900 flex items-center justify-center">
+          <img src={courseData.image} alt={courseData.title} className="w-full h-full object-contain" />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent" />
           
           {/* Close Button */}
@@ -341,35 +373,92 @@ const CourseModal = ({ course, onClose }) => {
             <div className="inline-flex items-center gap-2 w-fit mb-3">
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide cp-gradient-text bg-white/70 backdrop-blur-sm border border-white/50">
                 <Sparkles className="w-3.5 h-3.5" />
-                {course.tag}
+                {courseData.category}
               </span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-white flex items-center gap-3">
-              <span className="text-3xl">{course.icon}</span>
-              {course.name}
+              <span className="text-3xl">{courseData.icon}</span>
+              {courseData.title}
             </h2>
+            {courseData.subtitle && (
+              <p className="text-slate-200 mt-2 text-sm sm:text-base">{courseData.subtitle}</p>
+            )}
           </div>
         </div>
+
+        {videoId && (
+          <div className="px-8 sm:px-10 pt-6">
+            <div className="rounded-2xl overflow-hidden border border-slate-200">
+              <div className="aspect-video">
+                <iframe
+                  src={`https://www.youtube.com/embed/${videoId}`}
+                  className="w-full h-full"
+                  style={{ border: 'none' }}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  title="Course Promo Video"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Content Section */}
         <div className="p-8 sm:p-10">
           {/* Meta Information */}
           <div className="flex flex-wrap gap-3 mb-8">
             <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-100/60 text-orange-700 font-semibold text-sm border border-orange-200/50 backdrop-blur">
-              <BarChart3 className="w-4 h-4" /> {course.level}
+              <BarChart3 className="w-4 h-4" /> {courseData.level}
             </span>
             <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-100/60 text-slate-600 font-semibold text-sm border border-slate-200/50 backdrop-blur">
-              <Clock className="w-4 h-4" /> {course.duration}
+              <Clock className="w-4 h-4" /> {courseData.duration}
             </span>
+            {courseData.language && (
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-100/70 text-sky-700 font-semibold text-sm border border-sky-200/50 backdrop-blur">
+                {courseData.language}
+              </span>
+            )}
             <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-100/60 text-green-700 font-semibold text-sm border border-green-200/50 backdrop-blur">
               <CheckCircle className="w-4 h-4" /> Live Classes
+            </span>
+            {courseData.modulesCount > 0 && (
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-100/70 text-indigo-700 font-semibold text-sm border border-indigo-200/50 backdrop-blur">
+                <BookOpen className="w-4 h-4" /> {courseData.modulesCount} modules
+              </span>
+            )}
+            {courseData.students > 0 && (
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-100/70 text-cyan-700 font-semibold text-sm border border-cyan-200/50 backdrop-blur">
+                <Users className="w-4 h-4" /> {courseData.students} students
+              </span>
+            )}
+            {courseData.rating > 0 && (
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-100/70 text-amber-700 font-semibold text-sm border border-amber-200/50 backdrop-blur">
+                <Star className="w-4 h-4" /> {courseData.rating.toFixed(1)}
+              </span>
+            )}
+          </div>
+
+          <div className="mb-6">
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white font-semibold text-sm">
+              {courseData.isFree ? '🎁 Free' : courseData.offerPrice ? (
+                <>
+                  <span className="line-through text-slate-300">₹{courseData.price}</span>
+                  <span>₹{courseData.offerPrice}</span>
+                </>
+              ) : `₹${courseData.price}`}
             </span>
           </div>
 
           {/* Description */}
           <p className="text-slate-700 leading-relaxed mb-8 font-medium">
-            {course.desc}
+            {courseData.description}
           </p>
+
+          {courseData.fullDescription && courseData.fullDescription !== courseData.description && (
+            <p className="text-slate-600 leading-relaxed mb-8">
+              {courseData.fullDescription}
+            </p>
+          )}
 
           {/* Learning Outcomes */}
           <div className="rounded-2xl cp-glass border-2 border-orange-200/30 p-7 mb-8">
@@ -378,7 +467,7 @@ const CourseModal = ({ course, onClose }) => {
               What You Will Learn
             </h4>
             <div className="grid sm:grid-cols-2 gap-3">
-              {course.details.map((detail, idx) => (
+              {courseData.details.map((detail, idx) => (
                 <div key={idx} className="flex items-start gap-3 text-sm text-slate-700 p-2 rounded-lg hover:bg-white/40 transition-colors" style={{
                   animation: `revealUp 0.5s ease ${100 + idx * 50}ms both`,
                 }}>
@@ -389,14 +478,57 @@ const CourseModal = ({ course, onClose }) => {
             </div>
           </div>
 
+          {courseData.prerequisites.filter(Boolean).length > 0 && (
+            <div className="rounded-2xl cp-glass border border-slate-200 p-7 mb-8">
+              <h4 className="text-lg font-bold text-slate-900 mb-3">Prerequisites</h4>
+              <ul className="space-y-2 text-slate-700 text-sm">
+                {courseData.prerequisites.filter(Boolean).map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-2">
+                    <span className="text-orange-500 mt-0.5">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {courseData.instructor?.name && (
+            <div className="rounded-2xl cp-glass border border-slate-200 p-5 mb-8 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 text-white font-bold text-lg flex items-center justify-center">
+                {courseData.instructor.name[0]}
+              </div>
+              <div>
+                <p className="text-slate-900 font-semibold">{courseData.instructor.name}</p>
+                {courseData.instructor.bio && (
+                  <p className="text-slate-600 text-sm">{courseData.instructor.bio}</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
-            <Link to="/login" className="flex-1">
-              <button className="w-full cp-btn-primary px-6 py-4 font-semibold text-lg rounded-xl inline-flex items-center justify-center gap-2 group">
-                Enroll Now
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            {enrolled ? (
+              <div className="flex-1 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-700 font-semibold text-lg px-6 py-4 text-center">
+                ✓ Already Enrolled
+              </div>
+            ) : isLoggedIn ? (
+              <button
+                className="flex-1 cp-btn-primary px-6 py-4 font-semibold text-lg rounded-xl inline-flex items-center justify-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
+                onClick={() => onEnroll(courseData.id, courseData.title)}
+                disabled={enrolling}
+              >
+                {enrolling ? 'Enrolling...' : 'Enroll Now'}
+                {!enrolling && <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
               </button>
-            </Link>
+            ) : (
+              <Link to="/login" className="flex-1">
+                <button className="w-full cp-btn-primary px-6 py-4 font-semibold text-lg rounded-xl inline-flex items-center justify-center gap-2 group">
+                  Login to Enroll
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </Link>
+            )}
             <Link to="/Contact-Us" className="flex-1">
               <button className="w-full cp-btn-secondary px-6 py-4 font-semibold text-lg rounded-xl hover:shadow-lg transition-all">
                 Free Counselling
@@ -413,9 +545,16 @@ const CoursesPage = () => {
   const [selected, setSelected] = useState(null);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [enrolledCourses, setEnrolledCourses] = useState(new Set());
+  const [enrollingId, setEnrollingId] = useState(null);
+  const [notification, setNotification] = useState(null);
+  const isLoggedIn = Boolean(localStorage.getItem('token'));
 
   useEffect(() => {
     fetchCourses();
+    if (isLoggedIn) {
+      fetchEnrolledCourses();
+    }
   }, []);
 
   const fetchCourses = async () => {
@@ -432,6 +571,49 @@ const CoursesPage = () => {
       setCourses([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEnrolledCourses = async () => {
+    try {
+      const res = await axios.get('/api/user/courses', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (res.data.success && res.data.data) {
+        const ids = new Set(res.data.data.map((c) => c.courseId?.toString() || c._id?.toString()));
+        setEnrolledCourses(ids);
+      }
+    } catch (err) {
+      setEnrolledCourses(new Set());
+    }
+  };
+
+  const handleEnroll = async (courseId, courseTitle) => {
+    if (!courseId) return;
+
+    setEnrollingId(courseId);
+    try {
+      const res = await axios.post(
+        '/api/user/enroll',
+        { courseId },
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+
+      if (res.data.success) {
+        setEnrolledCourses((prev) => new Set([...prev, courseId.toString()]));
+        setNotification({ type: 'success', message: `Enrolled in "${courseTitle}" successfully!` });
+        fetchEnrolledCourses();
+      }
+    } catch (err) {
+      if (err.response?.data?.alreadyEnrolled) {
+        setEnrolledCourses((prev) => new Set([...prev, courseId.toString()]));
+        setNotification({ type: 'success', message: `Already enrolled in "${courseTitle}".` });
+      } else {
+        setNotification({ type: 'error', message: err.response?.data?.message || 'Failed to enroll in course.' });
+      }
+    } finally {
+      setEnrollingId(null);
+      setTimeout(() => setNotification(null), 3000);
     }
   };
 
@@ -456,6 +638,12 @@ const CoursesPage = () => {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 overflow-x-hidden cp-shell">
       <GlobalStyles />
       <NavBarpage />
+
+      {notification && (
+        <div className={`fixed top-5 right-5 z-[10000] px-5 py-3 rounded-xl text-white font-semibold shadow-xl ${notification.type === 'success' ? 'bg-emerald-600' : 'bg-red-600'}`}>
+          {notification.message}
+        </div>
+      )}
 
       {/* Hero Section */}
       <section className="relative min-h-[62vh] flex items-center justify-center overflow-hidden pt-20 sm:pt-24">
@@ -550,7 +738,16 @@ const CoursesPage = () => {
       <FooterPage />
 
       {/* Modal */}
-      {selected && <CourseModal course={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <CourseModal
+          course={selected}
+          onClose={() => setSelected(null)}
+          onEnroll={handleEnroll}
+          enrolled={enrolledCourses.has(selected._id?.toString())}
+          enrolling={enrollingId === selected._id}
+          isLoggedIn={isLoggedIn}
+        />
+      )}
     </div>
   );
 };
