@@ -84,6 +84,7 @@ export const getUserCourses = async (req, res) => {
         enrollment: {
           enrolledAt: enrollment.enrolledAt,
           progress: enrollment.progress,
+          isCompleted: Number(enrollment.progress || 0) >= 100,
           isActive: enrollment.isActive,
           lastAccessedLesson: enrollment.lastAccessedLesson
         }
@@ -385,6 +386,7 @@ export const getCourseProgress = async (req, res) => {
         courseId,
         enrollmentId: enrollment._id,
         progress: progressData.progressPercentage,
+        isCompleted: progressData.progressPercentage >= 100,
         completedCount: progressData.completedCount,
         totalLessons: progressData.totalLessons,
         completedLessonIds: progressData.completedLessonIds,
@@ -486,6 +488,7 @@ export const updateLessonProgress = async (req, res) => {
         lessonId,
         completed: Boolean(completed),
         progress: progressData.progressPercentage,
+        isCompleted: progressData.progressPercentage >= 100,
         completedCount: progressData.completedCount,
         totalLessons: progressData.totalLessons,
         completedLessonIds: progressData.completedLessonIds,

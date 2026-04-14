@@ -84,6 +84,7 @@ const UserCourseViewer = ({ courseId, courseTitle, onBack }) => {
   const totalLessonCount = modules.reduce((total, mod) => total + (mod.lessons?.length || 0), 0);
   const completedCount = Array.from(completedLessonIds).length;
   const isCurrentLessonCompleted = Boolean(currentLesson?._id && completedLessonIds.has(String(currentLesson._id)));
+  const isCourseCompleted = totalLessonCount > 0 && progressPercent >= 100;
 
   const toggleLessonCompletion = async () => {
     if (!currentLesson?._id) return;
@@ -129,6 +130,11 @@ const UserCourseViewer = ({ courseId, courseTitle, onBack }) => {
         <div>
           <h1 style={{ fontFamily:SERIF, fontSize:'1.6rem', fontWeight:700, color:SLATE, margin:0 }}>{course.title}</h1>
           <p style={{ color:MUTED, fontSize:'0.82rem', margin:'2px 0 0', fontFamily:SANS }}>{course.category} · {course.level}</p>
+        </div>
+        <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
+          <span style={{ fontSize:'0.76rem', fontWeight:700, color: isCourseCompleted ? '#0F766E' : AMBER, background: isCourseCompleted ? 'rgba(20,184,166,0.1)' : 'rgba(217,119,6,0.1)', border: `1px solid ${isCourseCompleted ? 'rgba(20,184,166,0.25)' : 'rgba(217,119,6,0.2)'}`, borderRadius:20, padding:'4px 12px', fontFamily:SANS }}>
+            {isCourseCompleted ? '🏆 Course Completed' : `${progressPercent}% Completed`}
+          </span>
         </div>
       </div>
 
