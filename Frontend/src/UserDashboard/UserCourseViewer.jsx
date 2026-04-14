@@ -243,6 +243,39 @@ const UserCourseViewer = ({ courseId, courseTitle, onBack }) => {
                 </div>
               )}
 
+              {/* PDF */}
+              {currentLesson.pdfUrl && (
+                <div style={{ marginBottom:'1.5rem' }}>
+                  <div style={{ borderRadius:12, overflow:'hidden', background:'#000', aspectRatio:'16/9' }}>
+                    <iframe
+                      src={currentLesson.pdfUrl}
+                      title={`${currentLesson.title || 'Lesson'} PDF`}
+                      style={{ width:'100%', height:'100%', border:'none', background:'#fff' }}
+                    />
+                  </div>
+
+                  <div style={{ marginTop:10, display:'flex', gap:8, flexWrap:'wrap' }}>
+                    <a
+                      href={currentLesson.pdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ textDecoration:'none', padding:'7px 12px', borderRadius:8, border:'1px solid #CBD5E1', color:SLATE, fontSize:'0.78rem', fontWeight:700, background:'#fff' }}
+                    >
+                      Open PDF
+                    </a>
+                    <a
+                      href={currentLesson.pdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      download
+                      style={{ textDecoration:'none', padding:'7px 12px', borderRadius:8, border:'none', color:'#fff', fontSize:'0.78rem', fontWeight:700, background:`linear-gradient(135deg,${AMBER},#B45309)` }}
+                    >
+                      Download PDF
+                    </a>
+                  </div>
+                </div>
+              )}
+
               {/* Description */}
               {currentLesson.description && (
                 <p style={{ color:'#475569', lineHeight:1.8, fontSize:'0.92rem', marginBottom:'1.5rem' }}>{currentLesson.description}</p>
