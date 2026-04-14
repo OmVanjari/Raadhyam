@@ -79,9 +79,23 @@ const UserEnrolledCoursesPage = ({ setActiveTab }) => {
                   {c.level && <span style={{ fontSize:'0.7rem', fontWeight:700, color:AMBER, background:'rgba(217,119,6,0.1)', border:'1px solid rgba(217,119,6,0.2)', borderRadius:20, padding:'2px 10px', fontFamily:SANS }}>{c.level}</span>}
                   {c.category && <span style={{ fontSize:'0.7rem', fontWeight:700, color:'#8B5CF6', background:'rgba(139,92,246,0.08)', border:'1px solid rgba(139,92,246,0.2)', borderRadius:20, padding:'2px 10px', fontFamily:SANS }}>{c.category}</span>}
                   <span style={{ fontSize:'0.7rem', fontWeight:700, color:'#10B981', background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.2)', borderRadius:20, padding:'2px 10px', fontFamily:SANS }}>✓ Enrolled</span>
+                  {Number(c?.enrollment?.progress || 0) >= 100 && (
+                    <span style={{ fontSize:'0.7rem', fontWeight:700, color:'#0F766E', background:'rgba(20,184,166,0.1)', border:'1px solid rgba(20,184,166,0.25)', borderRadius:20, padding:'2px 10px', fontFamily:SANS }}>🏆 Completed</span>
+                  )}
                 </div>
                 <h3 style={{ fontFamily:SERIF, fontSize:'1.1rem', fontWeight:700, color:SLATE, marginBottom:6 }}>{c.title}</h3>
                 <p style={{ color:MUTED, fontSize:'0.82rem', lineHeight:1.6, fontFamily:SANS, marginBottom:'1rem', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{c.description}</p>
+                <div style={{ marginBottom:'0.9rem' }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:5 }}>
+                    <span style={{ fontSize:'0.74rem', color:MUTED, fontFamily:SANS, fontWeight:600 }}>Progress</span>
+                    <span style={{ fontSize:'0.74rem', color: Number(c?.enrollment?.progress || 0) >= 100 ? '#0F766E' : AMBER, fontFamily:SANS, fontWeight:700 }}>
+                      {Math.max(0, Math.min(100, Number(c?.enrollment?.progress || 0)))}%
+                    </span>
+                  </div>
+                  <div style={{ height:7, borderRadius:999, background:'#E2E8F0', overflow:'hidden' }}>
+                    <div style={{ width:`${Math.max(0, Math.min(100, Number(c?.enrollment?.progress || 0)))}%`, height:'100%', background: Number(c?.enrollment?.progress || 0) >= 100 ? 'linear-gradient(135deg,#14B8A6,#0F766E)' : `linear-gradient(135deg,${AMBER},#B45309)` }} />
+                  </div>
+                </div>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                   <span style={{ fontSize:'0.78rem', color:MUTED, fontFamily:SANS }}>🕐 {c.duration || 'Self-paced'}</span>
                   <button
