@@ -4,6 +4,7 @@ import {
   Menu, X, LogOut, Home, BookOpen,
   LayoutDashboard, FileText, Users, Music
 } from 'lucide-react';
+import axios from 'axios';
 
 const STYLES = `
   @keyframes fadeIn {
@@ -45,7 +46,34 @@ const NavItem = ({ item, active, onClick }) => (
 
 const SidebarContent = ({ activeTab, setActiveTab, setSidebarOpen }) => {
   const navigate = useNavigate();
-  const handleLogout = () => { localStorage.removeItem('token'); navigate('/'); };
+  const [userData, setUserData] = useState({});
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const localData = localStorage.getItem('userData');
+        if (localData) {
+          setUserData(JSON.parse(localData));
+        }
+        
+        const res = await axios.get('/api/auth/check-auth');
+        if (res.data.authenticated && res.data.user) {
+          setUserData(res.data.user);
+          localStorage.setItem('userData', JSON.stringify(res.data.user));
+        }
+      } catch (err) {
+        console.error('Failed to fetch user data:', err);
+        const localData = localStorage.getItem('userData');
+        if (localData) {
+          setUserData(JSON.parse(localData));
+        }
+      }
+    };
+    
+    fetchUserData();
+  }, []);
+
+  const handleLogout = () => { localStorage.removeItem('token'); localStorage.removeItem('userData'); navigate('/'); };
   const handleGoHome = () => navigate('/');
 
   return (
@@ -83,11 +111,11 @@ const SidebarContent = ({ activeTab, setActiveTab, setSidebarOpen }) => {
       <div className="px-3 py-4 border-t border-gray-100">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-xs font-bold">A</span>
+            <span className="text-white text-xs font-bold">{(userData.name || userData.email || 'A')[0].toUpperCase()}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold text-gray-800 truncate">Admin</div>
-            <div className="text-xs text-gray-400 truncate">admin@raadhyam.com</div>
+            <div className="text-sm font-semibold text-gray-800 truncate">{userData.name || 'Admin'}</div>
+            <div className="text-xs text-gray-400 truncate">{userData.email || 'admin@raadhyam.com'}</div>
           </div>
           <button onClick={handleLogout} title="Logout"
             className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-150">

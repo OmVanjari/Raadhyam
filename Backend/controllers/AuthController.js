@@ -3,10 +3,60 @@ import crypto from "crypto";
 import User from "../models/users.js";
 import jwt from "jsonwebtoken";
 
+// Validate JWT_SECRET at startup
+if (!process.env.JWT_SECRET) {
+  throw new Error('FATAL: JWT_SECRET environment variable is not set');
+}
+
+// Trusted redirect URLs whitelist
+const TRUSTED_REDIRECT_URLS = [
+  process.env.CLIENT_URL,
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000'
+].filter(Boolean);
+
+// In-memory store for OAuth nonces (production should use Redis)
+const oauthStateStore = new Map();
+const STATE_TTL = 10 * 60 * 1000; // 10 minutes
+
+// Clean up expired states periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, value] of oauthStateStore.entries()) {
+    if (now - value.timestamp > STATE_TTL) {
+      oauthStateStore.delete(key);
+    }
+  }
+}, 60 * 1000); // Clean every minute
+
 // Validation helpers
 const isValidEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
+};
+
+// Validate redirect URL against whitelist
+const isValidRedirectUrl = (url) => {
+  try {
+    const parsedUrl = new URL(url);
+    return TRUSTED_REDIRECT_URLS.some(trusted => {
+      const trustedUrl = new URL(trusted);
+      return parsedUrl.origin === trustedUrl.origin;
+    });
+  } catch {
+    return false;
+  }
+};
+
+// Safe decodeURIComponent wrapper
+const safeDecodeURIComponent = (str) => {
+  try {
+    return decodeURIComponent(str);
+  } catch {
+    return null;
+  }
 };
 
 const isStrongPassword = (password) => {
@@ -166,6 +216,9 @@ export const loginUser = async (req, res) => {
       });
     }
 
+    // Generate session ID for token invalidation
+    const sessionId = crypto.randomBytes(32).toString('hex');
+
     // Generate JWT token with role and user info
     const token = jwt.sign(
       {
@@ -173,14 +226,15 @@ export const loginUser = async (req, res) => {
         email: user.email,
         username: user.username,
         role: user.role,
-        name: user.name
+        name: user.name,
+        sessionId
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // Store current token for session invalidation
-    user.currentToken = token;
+    // Store session ID for invalidation (instead of whole token)
+    user.sessionId = sessionId;
     await user.save();
 
     // Set HTTP-only cookie
@@ -348,4 +402,149 @@ export const checkAuth = (req, res) => {
     authenticated: true,
     user: req.user
   });
+};
+
+// Google OAuth - Initiate
+export const googleAuth = async (req, res, next) => {
+  console.log('[Google OAuth] Initiating Google login...');
+  const passport = (await import('passport')).default;
+  
+  // Validate and get redirect URL
+  const redirect = req.query.redirect || process.env.CLIENT_URL + '/login';
+  console.log('[Google OAuth] Redirect URL:', redirect);
+  
+  if (!isValidRedirectUrl(redirect)) {
+    console.log('[Google OAuth] Invalid redirect URL:', redirect);
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid redirect URL'
+    });
+  }
+
+  // Generate nonce for CSRF protection
+  const nonce = crypto.randomBytes(32).toString('hex');
+  const stateId = crypto.randomBytes(16).toString('hex');
+  
+  // Store nonce with redirect URL and timestamp
+  oauthStateStore.set(stateId, {
+    nonce,
+    redirect,
+    timestamp: Date.now()
+  });
+  console.log('[Google OAuth] State stored, stateId:', stateId);
+
+  // Encode state with nonce and stateId
+  const state = encodeURIComponent(JSON.stringify({ nonce, stateId }));
+  console.log('[Google OAuth] Authenticating with Google...');
+  
+  passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    state
+  })(req, res, next);
+};
+
+// Google OAuth - Callback
+export const googleAuthCallback = async (req, res, next) => {
+  console.log('[Google OAuth Callback] Received callback from Google');
+  const passport = (await import('passport')).default;
+  passport.authenticate('google', { session: false }, async (err, user, info) => {
+    try {
+      console.log('[Google OAuth Callback] Authentication result:', { err: err?.message, user: user ? user.email : null, info });
+      
+      // Parse and validate state
+      let redirect = process.env.CLIENT_URL + '/login';
+      let stateData = null;
+      
+      if (req.query.state) {
+        console.log('[Google OAuth Callback] State parameter received');
+        const decodedState = safeDecodeURIComponent(req.query.state);
+        if (decodedState) {
+          try {
+            stateData = JSON.parse(decodedState);
+            console.log('[Google OAuth Callback] Parsed state data:', stateData);
+          } catch {
+            // Invalid JSON, use default redirect
+            console.log('[Google OAuth Callback] Failed to parse state JSON');
+          }
+        }
+      }
+
+      // Validate nonce and get redirect URL from state store
+      if (stateData && stateData.nonce && stateData.stateId) {
+        const storedState = oauthStateStore.get(stateData.stateId);
+        console.log('[Google OAuth Callback] Validating state, storedState exists:', !!storedState);
+        
+        if (storedState && storedState.nonce === stateData.nonce && Date.now() - storedState.timestamp < STATE_TTL) {
+          // Valid nonce, use stored redirect URL
+          redirect = storedState.redirect;
+          // Delete used state to prevent replay
+          oauthStateStore.delete(stateData.stateId);
+          console.log('[Google OAuth Callback] State validated successfully, redirecting to:', redirect);
+        } else {
+          // Invalid or expired nonce
+          console.log('[Google OAuth Callback] Invalid or expired nonce');
+          return res.redirect(`${process.env.CLIENT_URL}/login?error=${encodeURIComponent('Invalid or expired authentication state')}`);
+        }
+      }
+
+      // Ensure redirect URL is trusted
+      if (!isValidRedirectUrl(redirect)) {
+        redirect = process.env.CLIENT_URL + '/login';
+      }
+
+      if (err || !user) {
+        console.log('[Google OAuth Callback] Authentication failed, err:', err?.message, 'user:', user);
+        return res.redirect(`${redirect}?error=${encodeURIComponent('Google authentication failed')}`);
+      }
+
+      // Check user status
+      if (user.status !== "Active") {
+        console.log('[Google OAuth Callback] User account not active, status:', user.status);
+        return res.redirect(`${redirect}?error=${encodeURIComponent('Account is not active')}`);
+      }
+
+      // Generate session ID for token invalidation
+      const sessionId = crypto.randomBytes(32).toString('hex');
+      console.log('[Google OAuth Callback] Generating JWT token for user:', user.email);
+
+      // Generate JWT token
+      const token = jwt.sign(
+        {
+          userId: user._id,
+          email: user.email,
+          username: user.username,
+          role: user.role,
+          name: user.name,
+          sessionId
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      // Store session ID for invalidation (instead of whole token)
+      user.sessionId = sessionId;
+      await user.save();
+
+      // Set HTTP-only secure cookie with token
+      res.cookie("auth_token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+
+      // Redirect to appropriate dashboard based on user role
+      const dashboardUrl = user.role === 'admin' 
+        ? `${process.env.CLIENT_URL}/dashboard/admin`
+        : `${process.env.CLIENT_URL}/dashboard/home`;
+      
+      console.log('[Google OAuth Callback] Redirecting to dashboard:', dashboardUrl);
+      res.redirect(dashboardUrl);
+
+    } catch (error) {
+      console.error('Google OAuth callback error:', error);
+      const redirect = process.env.CLIENT_URL + '/login';
+      res.redirect(`${redirect}?error=${encodeURIComponent('Authentication failed')}`);
+    }
+  })(req, res, next);
 };

@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import seedAdmin from './seedAdmin.js';
 
-dotenv.config({ path: './.env' });
+dotenv.config();
 const startServer = async () => {
   const { default: connectDB } = await import('./config/DB.js');
   const { default: AdminRoutes } = await import('./routes/AdminRoutes.js');

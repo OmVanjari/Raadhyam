@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema({
   name: String,
   avatar: String,
   role: { type: String, enum: ["user", "admin"], default: "user" },
-  currentToken: { type: String, default: null },
+  sessionId: { type: String, default: null },
   resetPasswordToken: String,
   resetPasswordExpires: Date,
   plan: { type: String, enum: ["Free", "Monthly Premium", "Annual Premium"], default: "Free" },

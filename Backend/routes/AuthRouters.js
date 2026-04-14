@@ -4,7 +4,9 @@ import {
   loginUser, 
   forgotPassword, 
   resetPassword,
-  checkAuth 
+  checkAuth,
+  googleAuth,
+  googleAuthCallback
 } from "../controllers/AuthController.js";
 import verifyToken from "../middlewares/AuthmiddleWare.js";
 
@@ -15,5 +17,9 @@ router.post("/login", loginUser);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 router.get("/check-auth", verifyToken, checkAuth);
+
+// Google OAuth routes
+router.get("/google", googleAuth);
+router.get("/google/callback", googleAuthCallback);
 
 export default router;

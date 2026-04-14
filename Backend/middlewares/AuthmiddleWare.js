@@ -1,6 +1,11 @@
 import jwt from "jsonwebtoken";
 import User from "../models/users.js";
 
+// Validate JWT_SECRET at startup
+if (!process.env.JWT_SECRET) {
+  throw new Error('FATAL: JWT_SECRET environment variable is not set');
+}
+
 const protect = async (req, res, next) => {
   try {
     let token =
@@ -30,10 +35,11 @@ const protect = async (req, res, next) => {
       });
     }
 
-    if (user.currentToken && user.currentToken !== token) {
+    // Validate sessionId for session invalidation
+    if (user.sessionId && user.sessionId !== decoded.sessionId) {
       return res.status(401).json({
         success: false,
-        message: "Another device logged in, session expired",
+        message: "Session expired or invalidated",
         code: "SESSION_EXPIRED"
       });
     }

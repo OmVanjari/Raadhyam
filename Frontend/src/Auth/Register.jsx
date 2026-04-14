@@ -17,8 +17,26 @@ const RegisterPage = () => {
   const [focused, setFocused]          = useState('');
   const canvasRef = useRef(null);
 
-  useEffect(() => { generateCaptcha(); }, []);
+  useEffect(() => {
+    generateCaptcha();
+    checkGoogleAuth();
+  }, []);
   useEffect(() => { setErrors({}); setSuccessMessage(''); }, [formData, userCaptcha]);
+
+  const checkGoogleAuth = () => {
+    const p = new URLSearchParams(window.location.search);
+    const token = p.get('token'), userData = p.get('user'), err = p.get('error');
+    if (token && userData) {
+      try {
+        const user = JSON.parse(decodeURIComponent(userData));
+        localStorage.setItem('token', token);
+        localStorage.setItem('userData', JSON.stringify(user));
+        window.history.replaceState({}, '', window.location.pathname);
+        window.location.href = user.role === 'admin' ? '/dashboard/admin' : '/dashboard/home';
+      } catch { setErrors({ general: 'Failed to process authentication data' }); }
+    }
+    if (err) { setErrors({ general: `Google authentication failed: ${err}` }); window.history.replaceState({}, '', window.location.pathname); }
+  };
 
   const generateCaptcha = () => {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -375,7 +393,7 @@ const RegisterPage = () => {
 
             <button
               onClick={() => {
-                window.location.href = '/api/auth/google';
+                window.location.href = `/api/auth/google?redirect=${encodeURIComponent(window.location.origin + '/register')}`;
               }}
               style={{
                 width: '100%',
