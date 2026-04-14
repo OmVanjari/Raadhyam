@@ -136,7 +136,7 @@ const MainDashboardAdmin = () => {
       const response = await axios.post('/api/admin/courses', courseData, getAxiosConfig());
       await fetchCourses();
       await fetchDashboardStats();
-      return response.data;
+      return response.data.course || response.data;
     } catch (error) {
       console.error('Error creating course:', error);
       const msg = error?.response?.data?.message || error?.response?.data?.error || error.message || 'Error creating course';
@@ -160,6 +160,7 @@ const MainDashboardAdmin = () => {
   const deleteCourse = async (id) => {
     if (window.confirm('Are you sure you want to delete this course?')) {
       try {
+        console.log('🗑️ Deleting course with ID:', id);
         await axios.delete(`/api/admin/courses/${id}`, getAxiosConfig());
         await fetchCourses();
         await fetchDashboardStats();
@@ -278,9 +279,21 @@ const MainDashboardAdmin = () => {
     setShowCourseForm(true);
   };
 
-  const viewCourseDetail = (course) => {
-    setSelectedCourse(course);
-    setCurrentCourseView('detail');
+  const viewCourseDetail = async (course) => {
+    if (!course?._id) return;
+
+    try {
+      const response = await axios.get(`/api/admin/courses/${course._id}`, getAxiosConfig());
+      const fullCourse = response.data?.course || response.data?.data || course;
+      setSelectedCourse(fullCourse);
+    } catch (error) {
+      console.error('Error fetching course detail:', error);
+      // Fallback to list item payload so user can still navigate.
+      setSelectedCourse(course);
+    } finally {
+      setCurrentCourseView('detail');
+      setActiveTab('courses');
+    }
   };
 
   const backToCoursesList = () => {
@@ -295,24 +308,46 @@ const MainDashboardAdmin = () => {
     setShowModuleForm(true);
   };
 
-  const openLessonForm = (lesson = null, moduleIndex = null, lessonIndex = null) => {
-    setEditingLesson({ ...lesson, moduleIndex, lessonIndex });
+  const openLessonForm = (lesson = null, moduleIndex = null, lessonIndex = null, moduleId = null) => {
+    console.log('📝 openLessonForm called with:', { lesson, moduleIndex, lessonIndex, moduleId });
+    console.log('📦 Lesson object properties:', lesson ? Object.keys(lesson) : 'null');
+    const editingLessonData = {
+      ...(lesson || {}),
+      moduleIndex,
+      lessonIndex,
+      moduleId
+    };
+    console.log('✅ Final editingLesson data:', editingLessonData);
+    setEditingLesson(editingLessonData);
     setShowLessonForm(true);
   };
 
-  const saveCourseContent = async () => {
-    if (!selectedCourse) return;
-    
-    // try {
-    //   await updateCourseModules(selectedCourse._id, updatedModules);
-    //   // Refresh the selected course data
-    //   const updatedCourses = await fetchCourses();
-    //   const updatedCourse = updatedCourses.find(c => c._id === selectedCourse._id);
-    //   setSelectedCourse(updatedCourse);
-    //   return updatedCourse;
-    // } catch (error) {
-    //   throw error;
-    // }
+  const saveCourseContent = async (updatedModules) => {
+    if (!selectedCourse?._id) {
+      throw new Error('No course selected');
+    }
+
+    try {
+      // Prefer dedicated modules endpoint if available.
+      await axios.post(
+        `/api/admin/courses/${selectedCourse._id}/modules`,
+        { modules: updatedModules },
+        getAxiosConfig()
+      );
+    } catch (postError) {
+      // Fallback for older API shape.
+      await axios.put(
+        `/api/admin/courses/${selectedCourse._id}`,
+        { modules: updatedModules },
+        getAxiosConfig()
+      );
+    }
+
+    const getRes = await axios.get(`/api/admin/courses/${selectedCourse._id}`, getAxiosConfig());
+    const refreshed = getRes.data.course || getRes.data.data || { ...selectedCourse, modules: updatedModules };
+    setSelectedCourse(refreshed);
+    await fetchCourses();
+    return refreshed;
   };
 
   const handleSaveModule = async (moduleData) => {
@@ -350,64 +385,59 @@ const MainDashboardAdmin = () => {
 
   const handleSaveLesson = async (lessonData) => {
     if (!selectedCourse) return;
-
     try {
-      const updatedModules = selectedCourse.modules ? [...selectedCourse.modules] : [];
-      
-      if (editingLesson && editingLesson.moduleIndex !== undefined) {
-        const moduleIndex = editingLesson.moduleIndex;
-        
-        if (editingLesson.lessonIndex !== undefined) {
-          // Update existing lesson
-          updatedModules[moduleIndex].lessons[editingLesson.lessonIndex] = {
-            ...updatedModules[moduleIndex].lessons[editingLesson.lessonIndex],
-            ...lessonData
-          };
-        } else {
-          // Add new lesson
-          const newLesson = {
-            ...lessonData,
-            position: updatedModules[moduleIndex].lessons.length,
-            createdAt: new Date().toISOString()
-          };
-          updatedModules[moduleIndex].lessons = [
-            ...(updatedModules[moduleIndex].lessons || []),
-            newLesson
-          ];
-        }
+      const updatedModules = (selectedCourse.modules || []).map((m) => ({
+        ...m,
+        lessons: m.lessons || []
+      }));
 
-        const updatedCourse = await saveCourseContent(updatedModules);
-        setSelectedCourse(updatedCourse);
-        setShowLessonForm(false);
-        setEditingLesson(null);
+      if (!editingLesson || editingLesson.moduleIndex === undefined || editingLesson.moduleIndex === null) {
+        alert('Module context missing for lesson save');
+        return;
       }
+
+      const mi = editingLesson.moduleIndex;
+      if (!updatedModules[mi]) {
+        alert('Module not found');
+        return;
+      }
+
+      if (editingLesson.lessonIndex !== undefined && editingLesson.lessonIndex !== null) {
+        updatedModules[mi].lessons[editingLesson.lessonIndex] = {
+          ...updatedModules[mi].lessons[editingLesson.lessonIndex],
+          ...lessonData
+        };
+      } else {
+        updatedModules[mi].lessons = [
+          ...updatedModules[mi].lessons,
+          { ...lessonData, position: updatedModules[mi].lessons.length, createdAt: new Date().toISOString() }
+        ];
+      }
+
+      await saveCourseContent(updatedModules);
+      setShowLessonForm(false);
+      setEditingLesson(null);
     } catch (error) {
       alert(error.message);
     }
   };
 
   const handleDeleteModule = async (moduleIndex) => {
-    if (window.confirm('Are you sure you want to delete this module? All lessons in this module will also be deleted.')) {
+    if (window.confirm('Delete this module and all its lessons?')) {
       try {
-        const updatedModules = selectedCourse.modules.filter((_, i) => i !== moduleIndex);
-        const updatedCourse = await saveCourseContent(updatedModules);
-        setSelectedCourse(updatedCourse);
-      } catch (error) {
-        alert(error.message);
-      }
+        const updatedModules = (selectedCourse.modules || []).filter((_, i) => i !== moduleIndex);
+        await saveCourseContent(updatedModules);
+      } catch (error) { alert(error.message); }
     }
   };
 
   const handleDeleteLesson = async (moduleIndex, lessonIndex) => {
-    if (window.confirm('Are you sure you want to delete this lesson?')) {
+    if (window.confirm('Delete this lesson?')) {
       try {
-        const updatedModules = [...selectedCourse.modules];
+        const updatedModules = (selectedCourse.modules || []).map(m => ({ ...m, lessons: m.lessons || [] }));
         updatedModules[moduleIndex].lessons = updatedModules[moduleIndex].lessons.filter((_, i) => i !== lessonIndex);
-        const updatedCourse = await saveCourseContent(updatedModules);
-        setSelectedCourse(updatedCourse);
-      } catch (error) {
-        alert(error.message);
-      }
+        await saveCourseContent(updatedModules);
+      } catch (error) { alert(error.message); }
     }
   };
 
@@ -422,7 +452,7 @@ const MainDashboardAdmin = () => {
           onOpenLessonForm={openLessonForm}
           onDeleteModule={handleDeleteModule}
           onDeleteLesson={handleDeleteLesson}
-          onSaveModules={saveCourseContent}
+          onSaveContent={saveCourseContent}
         />
       );
     }
