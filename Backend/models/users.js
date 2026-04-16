@@ -12,6 +12,8 @@ const userSchema = new mongoose.Schema({
   sessionId: { type: String, default: null },
   resetPasswordToken: String,
   resetPasswordExpires: Date,
+  otp: String,
+  otpExpires: Date,
   plan: { type: String, enum: ["Free", "Monthly Premium", "Annual Premium"], default: "Free" },
   status: { type: String, enum: ["Active", "Inactive", "Suspended", "Deleted"], default: "Active" },
   streams: { type: Number, default: 0 },

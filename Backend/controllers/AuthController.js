@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import User from "../models/users.js";
 import jwt from "jsonwebtoken";
+import { sendPasswordResetOTP } from "../config/emailService.js";
 
 // Validate JWT_SECRET at startup
 if (!process.env.JWT_SECRET) {
@@ -17,7 +18,7 @@ const TRUSTED_REDIRECT_URLS = [
   'http://127.0.0.1:3000'
 ].filter(Boolean);
 
-// In-memory store for OAuth nonces (production should use Redis)
+// In-memory store for OAuth nonces
 const oauthStateStore = new Map();
 const STATE_TTL = 10 * 60 * 1000; // 10 minutes
 
@@ -290,39 +291,58 @@ export const forgotPassword = async (req, res) => {
     const user = await User.findOne({ email: email.toLowerCase() });
 
     // Always return success to prevent email enumeration
-    // In production, this would send an email
     if (!user) {
       return res.status(200).json({
         success: true,
-        message: "If that email exists, a password reset link has been sent"
+        message: "If that email exists, an OTP has been sent to your email"
       });
     }
 
-    // Generate reset token (24-hour expiry)
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    const resetPasswordExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+    // Check if user has password (not Google OAuth only)
+    if (!user.password) {
+      return res.status(200).json({
+        success: true,
+        message: "If that email exists, an OTP has been sent to your email"
+      });
+    }
 
-    // Hash token before storing (never store plain token)
-    const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
 
-    // Save hashed token and expiry
-    user.resetPasswordToken = hashedToken;
-    user.resetPasswordExpires = new Date(resetPasswordExpires);
+    // Save OTP and expiry
+    user.otp = otp;
+    user.otpExpires = new Date(otpExpires);
     await user.save();
 
-    // In production, send email with reset link
-    // For now, return the plain token (development only)
-    // Example reset URL: /reset-password?token=<token>&email=<email>
-    
+    // Send OTP email via Brevo
+    try {
+      await sendPasswordResetOTP(user.email, otp, user.name);
+      console.log(`OTP sent to ${user.email}: ${otp}`);
+    } catch (emailError) {
+      console.error("Failed to send OTP email:", emailError.message);
+      // In development, return OTP in response for testing
+      if (process.env.NODE_ENV !== "production") {
+        return res.status(200).json({
+          success: true,
+          message: "If that email exists, an OTP has been sent to your email",
+          // Development-only: include OTP for testing
+          ...(process.env.NODE_ENV !== "production" && { 
+            otp: otp,
+            note: "OTP included for development testing only"
+          })
+        });
+      }
+      // In production, still return success to prevent enumeration
+      return res.status(200).json({
+        success: true,
+        message: "If that email exists, an OTP has been sent to your email"
+      });
+    }
+
     res.status(200).json({
       success: true,
-      message: "If that email exists, a password reset link has been sent",
-      // Development-only: include token for testing
-      // Remove this in production
-      ...(process.env.NODE_ENV !== "production" && { 
-        resetToken: resetToken,
-        resetUrl: `/reset-password?token=${resetToken}&email=${user.email}`
-      })
+      message: "If that email exists, an OTP has been sent to your email"
     });
 
   } catch (err) {
@@ -331,7 +351,70 @@ export const forgotPassword = async (req, res) => {
     // Always return success to prevent enumeration
     res.status(200).json({
       success: true,
-      message: "If that email exists, a password reset link has been sent"
+      message: "If that email exists, an OTP has been sent to your email"
+    });
+  }
+};
+
+export const verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    // Input validation
+    if (!email || !otp) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email and OTP are required" 
+      });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid email format" 
+      });
+    }
+
+    // Find user with valid OTP
+    const user = await User.findOne({ 
+      email: email.toLowerCase(),
+      otp: otp,
+      otpExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid or expired OTP" 
+      });
+    }
+
+    // OTP is valid, generate a temporary reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
+
+    // Hash token before storing
+    const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+    // Save reset token and clear OTP
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = new Date(resetPasswordExpires);
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "OTP verified successfully",
+      resetToken: resetToken,
+      email: user.email
+    });
+
+  } catch (err) {
+    console.error("Verify OTP error:", err.message);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error" 
     });
   }
 };
@@ -389,6 +472,83 @@ export const resetPassword = async (req, res) => {
 
   } catch (err) {
     console.error("Reset password error:", err.message);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error" 
+    });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.userId;
+
+    // Input validation
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Current password and new password are required" 
+      });
+    }
+
+    if (!isStrongPassword(newPassword)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Password must be at least 8 characters with one letter and one number" 
+      });
+    }
+
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
+
+    // Check if user has password (not Google OAuth only)
+    if (!user.password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Use Google Sign-In for this account" 
+      });
+    }
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Current password is incorrect" 
+      });
+    }
+
+    // Check if new password is same as current
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "New password must be different from current password" 
+      });
+    }
+
+    // Hash new password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update user's password
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Password changed successfully"
+    });
+
+  } catch (err) {
+    console.error("Change password error:", err.message);
     res.status(500).json({ 
       success: false, 
       message: "Server error" 
