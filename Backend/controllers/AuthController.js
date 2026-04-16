@@ -533,13 +533,21 @@ export const googleAuthCallback = async (req, res, next) => {
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
-      // Redirect to appropriate dashboard based on user role
-      const dashboardUrl = user.role === 'admin' 
-        ? `${process.env.CLIENT_URL}/dashboard/admin`
-        : `${process.env.CLIENT_URL}/dashboard/home`;
-      
-      console.log('[Google OAuth Callback] Redirecting to dashboard:', dashboardUrl);
-      res.redirect(dashboardUrl);
+      // Redirect through login page so frontend stores token/user in localStorage.
+      // Dashboard data requests depend on Bearer token from localStorage.
+      const userPayload = {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        avatar: user.avatar
+      };
+
+      const loginRedirectUrl = `${process.env.CLIENT_URL}/login?token=${encodeURIComponent(token)}&user=${encodeURIComponent(JSON.stringify(userPayload))}`;
+
+      console.log('[Google OAuth Callback] Redirecting to login with auth payload for client session hydration');
+      res.redirect(loginRedirectUrl);
 
     } catch (error) {
       console.error('Google OAuth callback error:', error);

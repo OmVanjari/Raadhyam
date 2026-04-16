@@ -246,12 +246,14 @@ const UserCourseViewer = ({ courseId, courseTitle, onBack }) => {
               {/* PDF */}
               {currentLesson.pdfUrl && (
                 <div style={{ marginBottom:'1.5rem' }}>
-                  <div style={{ borderRadius:12, overflow:'hidden', background:'#000', aspectRatio:'16/9' }}>
+                  <div className="pdf-viewer-shell" style={{ borderRadius:12, overflow:'hidden', background:'#0F172A', border:'1px solid #E2E8F0' }}>
+                    <div className="pdf-viewer-frameWrap" style={{ height:'72vh', minHeight:420, maxHeight:900 }}>
                     <iframe
                       src={currentLesson.pdfUrl}
                       title={`${currentLesson.title || 'Lesson'} PDF`}
-                      style={{ width:'100%', height:'100%', border:'none', background:'#fff' }}
+                      style={{ width:'100%', height:'100%', border:'none', background:'#fff', display:'block' }}
                     />
+                    </div>
                   </div>
 
                   <div style={{ marginTop:10, display:'flex', gap:8, flexWrap:'wrap' }}>
@@ -361,6 +363,8 @@ const UserCourseViewer = ({ courseId, courseTitle, onBack }) => {
         @media(max-width:768px){
           .cv-grid { grid-template-columns:1fr !important; }
           .cv-sidebar { position:static !important; max-height:260px; overflow-y:auto; }
+          .pdf-viewer-shell { border-radius:10px !important; }
+          .pdf-viewer-frameWrap { height:62vh !important; min-height:340px !important; max-height:75vh !important; overflow:auto; -webkit-overflow-scrolling:touch; }
         }
       `}</style>
     </div>

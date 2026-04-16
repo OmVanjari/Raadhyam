@@ -2,6 +2,8 @@ import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import dotenv from "dotenv";
 
+const escapeRegex = (value = "") => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 // Load environment variables from the project root .env file
 // Using default config will search for .env in the current working directory (project root)
 dotenv.config();
@@ -36,21 +38,46 @@ try {
           
           try {
             const User = (await import('../models/users.js')).default;
+            const googleEmailRaw = profile.emails?.[0]?.value;
+
+            if (!googleEmailRaw) {
+              return done(new Error('Google account did not provide an email'), null);
+            }
+
+            const normalizedEmail = googleEmailRaw.toLowerCase().trim();
+            const emailQuery = { email: new RegExp(`^${escapeRegex(normalizedEmail)}$`, 'i') };
+            let userByEmail = await User.findOne(emailQuery);
             
-            // Check if user exists by googleId
+            // Always prefer email linkage so password and Google sign-in resolve to one account.
+            if (userByEmail) {
+              console.log('[Passport Google Strategy] Found user by email, ensuring googleId is linked:', userByEmail.email);
+
+              // If this googleId is linked to a different user, unlink it to avoid future wrong-account logins.
+              const existingGoogleUser = await User.findOne({ googleId: profile.id, _id: { $ne: userByEmail._id } });
+              if (existingGoogleUser) {
+                existingGoogleUser.googleId = undefined;
+                await existingGoogleUser.save();
+              }
+
+              userByEmail.googleId = profile.id;
+              userByEmail.email = normalizedEmail;
+              userByEmail.name = profile.displayName;
+              if (profile.photos?.[0]?.value) {
+                userByEmail.avatar = profile.photos[0].value;
+              }
+              await userByEmail.save();
+              return done(null, userByEmail);
+            }
+
+            // If no email match exists, allow login by existing googleId.
             let user = await User.findOne({ googleId: profile.id });
             if (user) {
               console.log('[Passport Google Strategy] Found user by googleId:', user.email);
-              return done(null, user);
-            }
-
-            // Check if user exists by email
-            user = await User.findOne({ email: profile.emails[0].value });
-            if (user) {
-              console.log('[Passport Google Strategy] Found user by email, linking googleId:', user.email);
-              user.googleId = profile.id;
+              user.email = user.email?.toLowerCase?.() || normalizedEmail;
               user.name = profile.displayName;
-              user.avatar = profile.photos[0].value;
+              if (profile.photos?.[0]?.value) {
+                user.avatar = profile.photos[0].value;
+              }
               await user.save();
               return done(null, user);
             }
@@ -69,9 +96,9 @@ try {
 
             user = new User({
               googleId: profile.id,
-              email: profile.emails[0].value,
+              email: normalizedEmail,
               name: profile.displayName,
-              avatar: profile.photos[0].value,
+              avatar: profile.photos?.[0]?.value,
               username: username,
               slug: username, // Use username as slug to ensure uniqueness
             });

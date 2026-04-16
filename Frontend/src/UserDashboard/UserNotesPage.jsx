@@ -167,7 +167,7 @@ const UserNotesPage = () => {
 
       {/* Full-screen modal — same as public Notes page */}
       {selectedNote && (
-        <div className="fixed inset-0 bg-slate-50 z-50 overflow-y-auto">
+        <div className="fixed inset-y-0 left-0 right-0 md:left-72 bg-slate-50 z-30 overflow-y-auto">
           {/* Sticky header */}
           <div className="sticky top-0 bg-white/95 backdrop-blur border-b border-slate-200 z-10">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

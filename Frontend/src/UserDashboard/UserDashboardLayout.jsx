@@ -281,7 +281,7 @@ const UserDashboardLayout = ({ children, activeTab, setActiveTab }) => {
       </div>
 
       {/* Main Content */}
-      <div className="md:pl-72 flex flex-col flex-1 relative z-10">
+      <div className="md:pl-72 flex flex-col flex-1 relative">
         {/* Mobile Header */}
         <div className={`sticky top-0 z-30 md:hidden transition-all duration-300 ${
           scrolled 
