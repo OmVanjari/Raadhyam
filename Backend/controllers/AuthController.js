@@ -318,7 +318,6 @@ export const forgotPassword = async (req, res) => {
     // Send OTP email via Brevo
     try {
       await sendPasswordResetOTP(user.email, otp, user.name);
-      console.log(`OTP sent to ${user.email}: ${otp}`);
     } catch (emailError) {
       console.error("Failed to send OTP email:", emailError.message);
       // In development, return OTP in response for testing

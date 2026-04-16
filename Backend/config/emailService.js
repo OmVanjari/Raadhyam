@@ -5,11 +5,8 @@ dotenv.config();
 
 // BREVO CONFIG
 const BREVO_API_KEY = process.env.BREVO_API;
-const BREVO_SENDER_NAME = "Raadhyam";
+const BREVO_SENDER_NAME = "raadhyam";
 const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER;
-
-console.log("Brevo Config - API Key:", BREVO_API_KEY ? "Set" : "Not Set");
-console.log("Brevo Config - Sender Email:", BREVO_SENDER_EMAIL);
 
 // BREVO CLIENT
 const brevoClient = axios.create({
@@ -28,7 +25,22 @@ const brevoClient = axios.create({
  * @returns {Promise<boolean>} - Success status
  */
 export const sendPasswordResetOTP = async (toEmail, otp, name) => {
-  console.log("sendPasswordResetOTP called with:", { toEmail, otp, name });
+  // Validate inputs
+  if (!toEmail) {
+    throw new Error("Recipient email is required");
+  }
+  if (!otp) {
+    throw new Error("OTP is required");
+  }
+
+  if (!BREVO_API_KEY) {
+    throw new Error("Brevo API key is not configured");
+  }
+
+  if (!BREVO_SENDER_EMAIL) {
+    throw new Error("Sender email is not configured");
+  }
+
   try {
     const html = `
       <!DOCTYPE html>
@@ -113,7 +125,7 @@ export const sendPasswordResetOTP = async (toEmail, otp, name) => {
       </html>
     `;
 
-    await brevoClient.post("/smtp/email", {
+    const emailPayload = {
       sender: {
         name: BREVO_SENDER_NAME,
         email: BREVO_SENDER_EMAIL
@@ -126,17 +138,17 @@ export const sendPasswordResetOTP = async (toEmail, otp, name) => {
       ],
       subject: "Password Reset OTP - Raadhyam",
       htmlContent: html
-    });
+    };
 
-    console.log("Brevo API response:", response.data);
-    console.log("Password reset OTP email sent successfully:", toEmail);
+    const response = await brevoClient.post("/smtp/email", emailPayload);
+
     return true;
 
   } catch (error) {
-    console.error("Error sending password reset OTP email:");
-    console.error("Error message:", error.message);
-    console.error("Error response:", error.response?.data);
-    console.error("Full error:", error);
+    console.error("Error sending password reset OTP email:", error.message);
+    if (error.response) {
+      console.error("Brevo API error:", error.response.data);
+    }
     throw new Error("Failed to send password reset email");
   }
 };
@@ -148,6 +160,19 @@ export const sendPasswordResetOTP = async (toEmail, otp, name) => {
  * @returns {Promise<boolean>} - Success status
  */
 export const sendWelcomeEmail = async (toEmail, name) => {
+  // Validate inputs
+  if (!toEmail) {
+    throw new Error("Recipient email is required");
+  }
+
+  if (!BREVO_API_KEY) {
+    throw new Error("Brevo API key is not configured");
+  }
+
+  if (!BREVO_SENDER_EMAIL) {
+    throw new Error("Sender email is not configured");
+  }
+
   try {
     const html = `
       <!DOCTYPE html>
@@ -198,7 +223,7 @@ export const sendWelcomeEmail = async (toEmail, name) => {
       </html>
     `;
 
-    await brevoClient.post("/smtp/email", {
+    const emailPayload = {
       sender: {
         name: BREVO_SENDER_NAME,
         email: BREVO_SENDER_EMAIL
@@ -211,13 +236,17 @@ export const sendWelcomeEmail = async (toEmail, name) => {
       ],
       subject: "Welcome to Raadhyam!",
       htmlContent: html
-    });
+    };
 
-    console.log("Welcome email sent successfully:", toEmail);
+    const response = await brevoClient.post("/smtp/email", emailPayload);
+
     return true;
 
   } catch (error) {
-    console.error("Error sending welcome email:", error.response?.data || error.message);
+    console.error("Error sending welcome email:", error.message);
+    if (error.response) {
+      console.error("Brevo API error:", error.response.data);
+    }
     throw new Error("Failed to send welcome email");
   }
 };
