@@ -65,30 +65,51 @@ export const getUserCourses = async (req, res) => {
       });
     }
 
-    const courses = enrollments
-      .filter(enrollment => enrollment.course) // skip if course was deleted
-      .map(enrollment => ({
-        courseId: enrollment.course._id.toString(),
-        _id: enrollment.course._id.toString(),
-        title: enrollment.course.title,
-        slug: enrollment.course.slug,
-        thumbnailUrl: enrollment.course.thumbnailUrl,
-        subtitle: enrollment.course.subtitle,
-        shortDescription: enrollment.course.shortDescription,
-        category: enrollment.course.category,
-        level: enrollment.course.level,
-        instructor: enrollment.course.instructor,
-        duration: enrollment.course.duration,
-        price: enrollment.course.price,
-        isFree: enrollment.course.isFree,
-        enrollment: {
-          enrolledAt: enrollment.enrolledAt,
-          progress: enrollment.progress,
-          isCompleted: Number(enrollment.progress || 0) >= 100,
-          isActive: enrollment.isActive,
-          lastAccessedLesson: enrollment.lastAccessedLesson
-        }
-      }));
+    const courses = await Promise.all(
+      enrollments
+        .filter(enrollment => enrollment.course) // skip if course was deleted
+        .map(async (enrollment) => {
+          const progressData = await computeProgressForEnrollment({
+            enrollmentId: enrollment._id,
+            course: enrollment.course
+          });
+
+          const derivedProgress = progressData.totalLessons > 0
+            ? progressData.progressPercentage
+            : Number(enrollment.progress || 0);
+
+          if (Number(enrollment.progress || 0) !== derivedProgress) {
+            enrollment.progress = derivedProgress;
+            await enrollment.save();
+          }
+
+          return {
+            courseId: enrollment.course._id.toString(),
+            _id: enrollment.course._id.toString(),
+            title: enrollment.course.title,
+            slug: enrollment.course.slug,
+            thumbnailUrl: enrollment.course.thumbnailUrl,
+            subtitle: enrollment.course.subtitle,
+            shortDescription: enrollment.course.shortDescription,
+            category: enrollment.course.category,
+            level: enrollment.course.level,
+            instructor: enrollment.course.instructor,
+            duration: enrollment.course.duration,
+            price: enrollment.course.price,
+            isFree: enrollment.course.isFree,
+            enrollment: {
+              enrolledAt: enrollment.enrolledAt,
+              progress: derivedProgress,
+              completedCount: progressData.completedCount,
+              totalLessons: progressData.totalLessons,
+              completedLessonIds: progressData.completedLessonIds,
+              isCompleted: derivedProgress >= 100,
+              isActive: enrollment.isActive,
+              lastAccessedLesson: enrollment.lastAccessedLesson
+            }
+          };
+        })
+    );
 
     res.status(200).json({
       success: true,

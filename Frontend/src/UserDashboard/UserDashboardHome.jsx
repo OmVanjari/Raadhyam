@@ -19,7 +19,9 @@ const StatCard = ({ icon, label, value, color }) => (
 
 const UserDashboardHome = ({ setActiveTab }) => {
   const userData = (() => { try { return JSON.parse(localStorage.getItem('userData') || '{}'); } catch { return {}; } })();
+  const token = localStorage.getItem('token');
   const [courses, setCourses] = useState([]);
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [notes, setNotes] = useState([]);
 
   useEffect(() => {
@@ -28,16 +30,26 @@ const UserDashboardHome = ({ setActiveTab }) => {
         // Use public courses endpoint which only shows published courses
         const coursesRes = await axios.get('/api/courses');
         setCourses(coursesRes.data.data || []);
+
+        if (token) {
+          const enrolledRes = await axios.get('/api/user/courses', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          setEnrolledCourses(enrolledRes.data?.data || []);
+        } else {
+          setEnrolledCourses([]);
+        }
         
         const notesRes = await axios.get('/api/music-notes');
         const notesData = notesRes.data?.data ?? notesRes.data?.notes ?? [];
         setNotes(Array.isArray(notesData) ? notesData : []);
       } catch (err) {
         console.error('Error fetching data:', err);
+        setEnrolledCourses([]);
       }
     };
     fetchData();
-  }, []);
+  }, [token]);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
@@ -59,25 +71,30 @@ const UserDashboardHome = ({ setActiveTab }) => {
 
       {/* Stats */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:'1rem', marginBottom:'2rem' }}>
-        <StatCard icon="📚" label="Available Courses" value={courses.length} color={AMBER} />
+        <StatCard icon="🎓" label="My Enrolled Courses" value={enrolledCourses.length} color={AMBER} />
+        <StatCard icon="📚" label="Available Courses" value={courses.length} color="#0EA5E9" />
         <StatCard icon="🎼" label="Music Notes" value={notes.length} color="#8B5CF6" />
-        <StatCard icon="🎵" label="Instruments" value={Math.max(courses.length * 3, 1)} color="#0EA5E9" />
-        <StatCard icon="⭐" label="Your Rating" value={courses.length > 0 ? "4.8" : "0.0"} color="#F59E0B" />
+        <StatCard icon="⭐" label="Your Rating" value={enrolledCourses.length > 0 ? "4.8" : "0.0"} color="#F59E0B" />
       </div>
 
-      {/* Recent courses */}
+      {/* My enrolled courses */}
       <div style={{ background:'#fff', borderRadius:16, padding:'1.5rem', border:'1px solid #F1F5F9', boxShadow:'0 2px 12px rgba(30,41,59,0.05)', marginBottom:'1.5rem' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.25rem' }}>
-          <h2 style={{ fontFamily:SERIF, fontSize:'1.4rem', fontWeight:700, color:SLATE }}>Available Courses</h2>
-          <button onClick={() => setActiveTab('explore')} style={{ fontSize:'0.8rem', fontWeight:700, color:AMBER, background:'rgba(217,119,6,0.08)', border:'1px solid rgba(217,119,6,0.2)', borderRadius:8, padding:'5px 14px', cursor:'pointer', fontFamily:SANS }}>View All →</button>
+          <h2 style={{ fontFamily:SERIF, fontSize:'1.4rem', fontWeight:700, color:SLATE }}>My Enrolled Courses</h2>
+          <button onClick={() => setActiveTab('enrolled')} style={{ fontSize:'0.8rem', fontWeight:700, color:AMBER, background:'rgba(217,119,6,0.08)', border:'1px solid rgba(217,119,6,0.2)', borderRadius:8, padding:'5px 14px', cursor:'pointer', fontFamily:SANS }}>View All →</button>
         </div>
-        {courses.length === 0 ? (
-          <p style={{ color:MUTED, fontSize:'0.9rem', fontFamily:SANS, textAlign:'center', padding:'2rem 0' }}>No courses available yet.</p>
+        {enrolledCourses.length === 0 ? (
+          <div style={{ textAlign:'center', padding:'1.25rem 0 1rem' }}>
+            <p style={{ color:MUTED, fontSize:'0.9rem', fontFamily:SANS, marginBottom:'0.9rem' }}>You are not enrolled in any course yet.</p>
+            <button onClick={() => setActiveTab('explore')} style={{ fontSize:'0.82rem', fontWeight:700, color:'#fff', background:`linear-gradient(135deg,${AMBER},#B45309)`, border:'none', borderRadius:10, padding:'9px 16px', cursor:'pointer', fontFamily:SANS }}>Browse Available Courses</button>
+          </div>
         ) : (
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))', gap:'1rem' }}>
-            {courses.slice(0,4).map((c,i) => (
+            {enrolledCourses.slice(0,4).map((c,i) => {
+              const progress = Math.max(0, Math.min(100, Number(c?.enrollment?.progress || 0)));
+              return (
               <div key={i}
-                onClick={() => setActiveTab('explore')}
+                onClick={() => setActiveTab('enrolled')}
                 style={{ border:'1px solid #F1F5F9', borderRadius:12, overflow:'hidden', transition:'box-shadow 0.2s, transform 0.2s', cursor:'pointer' }}
                 onMouseEnter={e=>{ e.currentTarget.style.boxShadow='0 8px 24px rgba(217,119,6,0.12)'; e.currentTarget.style.transform='translateY(-3px)'; }}
                 onMouseLeave={e=>{ e.currentTarget.style.boxShadow='none'; e.currentTarget.style.transform='none'; }}>
@@ -89,18 +106,14 @@ const UserDashboardHome = ({ setActiveTab }) => {
                   <div style={{ fontWeight:700, color:SLATE, fontSize:'0.9rem', fontFamily:SANS, marginBottom:4 }}>{c.title}</div>
                   <div style={{ fontSize:'0.75rem', color:MUTED, fontFamily:SANS, display:'flex', justifyContent:'space-between' }}>
                     <span>{c.level || 'All Levels'}</span>
-                    <span style={{ color:AMBER, fontWeight:600 }}>
-                      {c.isFree ? 'Free' : c.offerPrice ? (
-                        <span>
-                          <span style={{ textDecoration:'line-through', color:'#94A3B8', marginRight:4, fontSize:'0.68rem' }}>₹{c.price||0}</span>
-                          <span>₹{c.offerPrice}</span>
-                        </span>
-                      ) : `₹${c.price||0}`}
-                    </span>
+                    <span style={{ color: progress >= 100 ? '#0F766E' : AMBER, fontWeight:700 }}>{progress}%</span>
+                  </div>
+                  <div style={{ marginTop:8, height:6, borderRadius:999, background:'#E2E8F0', overflow:'hidden' }}>
+                    <div style={{ width:`${progress}%`, height:'100%', background: progress >= 100 ? 'linear-gradient(135deg,#14B8A6,#0F766E)' : `linear-gradient(135deg,${AMBER},#B45309)` }}></div>
                   </div>
                 </div>
               </div>
-            ))}
+            );})}
           </div>
         )}
       </div>

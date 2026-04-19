@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, X, LogOut, User, Home, BookOpen, FileText, Music, Sparkles, GraduationCap } from 'lucide-react';
+import axios from 'axios';
 
 const UserDashboardLayout = ({ children, activeTab, setActiveTab }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [userData, setUserData] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,9 +17,34 @@ const UserDashboardLayout = ({ children, activeTab, setActiveTab }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const userData = (() => {
-    try { return JSON.parse(localStorage.getItem('userData') || '{}'); } catch { return {}; }
-  })();
+  useEffect(() => {
+    // Fetch user data from API
+    const fetchUserData = async () => {
+      try {
+        // First try localStorage
+        const localData = localStorage.getItem('userData');
+        if (localData) {
+          setUserData(JSON.parse(localData));
+        }
+        
+        // Then fetch fresh data from API
+        const res = await axios.get('/api/auth/check-auth');
+        if (res.data.authenticated && res.data.user) {
+          setUserData(res.data.user);
+          localStorage.setItem('userData', JSON.stringify(res.data.user));
+        }
+      } catch (err) {
+        console.error('Failed to fetch user data:', err);
+        // Keep localStorage data if API fails
+        const localData = localStorage.getItem('userData');
+        if (localData) {
+          setUserData(JSON.parse(localData));
+        }
+      }
+    };
+    
+    fetchUserData();
+  }, []);
 
   const navigation = [
     { name: 'Dashboard',        icon: Home,           id: 'home' },
@@ -254,7 +281,7 @@ const UserDashboardLayout = ({ children, activeTab, setActiveTab }) => {
       </div>
 
       {/* Main Content */}
-      <div className="md:pl-72 flex flex-col flex-1 relative z-10">
+      <div className="md:pl-72 flex flex-col flex-1 relative">
         {/* Mobile Header */}
         <div className={`sticky top-0 z-30 md:hidden transition-all duration-300 ${
           scrolled 

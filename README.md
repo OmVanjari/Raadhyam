@@ -1,200 +1,236 @@
-# Raadhyam Portal
+# 🎵 Raadhyam Music Portal
 
-## Platform
+A full-stack music education platform with an admin dashboard, student portal, course management, music notes library, and OTP-based authentication.
 
-Raadhyam Portal is a web-based music learning and content management platform.
-
-- `Frontend`: React + Vite single-page application for users and admin
-- `Backend`: Node.js + Express REST API
-- `Database`: MongoDB with Mongoose
-- `Storage`: Cloudinary for media uploads
-
-## Overview
-
-Based on the current codebase, the project provides:
-- Public pages: `Welcome`, `About`, `Contact`, and `Music Notes`
-- Authentication: email/password login and Google OAuth login
-- Admin module: create, update, and delete courses and music notes
-- Upload workflow: file and thumbnail uploads through Cloudinary
-- Secure APIs: JWT-based protected routes with single-session token enforcement
+---
 
 ## Tech Stack
 
-### Frontend
-- React 19
-- Vite 7
-- React Router 7
-- Axios
-- Tailwind CSS 4
+| Layer    | Technology |
+|----------|-----------|
+| Frontend | React 18, Vite, Tailwind CSS |
+| Backend  | Node.js, Express 5, MongoDB (Mongoose) |
+| Auth     | JWT, Google OAuth (Passport.js) |
+| Storage  | Cloudinary (images/videos) |
+| Email    | Nodemailer (Gmail SMTP) |
 
-### Backend
-- Node.js + Express 5
-- MongoDB + Mongoose
-- JWT authentication
-- Passport Google OAuth 2.0
-- Multer + Cloudinary (file uploads)
+---
 
 ## Project Structure
 
-```text
-Raadhyam Potal/
-  Backend/
-    config/
-    controllers/
-    middlewares/
-    models/
-    routers/
-    index.js
-  Frontend/
-    src/
-    public/
-    vite.config.js
+```
+Raadhyam Portal/
+├── Backend/
+│   ├── config/          # DB, Cloudinary, Passport
+│   ├── controllers/     # Auth, Admin, Course, User
+│   ├── middlewares/     # JWT auth, isAdmin, upload
+│   ├── models/          # User, Course, Enrollment, Progress, Notes
+│   ├── routes/          # Auth, Admin, Course, User, Dashboard
+│   ├── utils/           # sendEmail.js
+│   ├── .env.example     # ← copy to .env and fill values
+│   └── server.js
+├── Frontend/
+│   ├── src/
+│   │   ├── AdminDashboard/   # Admin panel pages
+│   │   ├── UserDashboard/    # Student portal pages
+│   │   ├── Auth/             # Login, Register, ForgotPassword
+│   │   └── WelcomePages/     # Public landing pages
+│   ├── .env.example     # ← copy to .env if needed
+│   └── vite.config.js
+└── README.md
 ```
 
-## Main Features
+---
 
-- User registration and login
-- Google Sign-In with redirect support
-- Token-based auth with single-session enforcement (`currentToken` check)
-- Admin CRUD for courses
-- Admin CRUD for music notes
-- Cloudinary-based file and thumbnail uploads
-- Public music notes page for users
+## Quick Start
 
-## API Summary
-
-Base path: `/api`
-
-### Auth Routes
-- `POST /register/user`
-- `POST /login/user`
-- `GET /auth/google`
-- `GET /auth/google/callback`
-- `GET /check-auth` (protected)
-
-### Public Content Routes
-- `GET /music-notes`
-
-### Admin Routes (Protected)
-- `GET /admin/courses`
-- `POST /admin/courses`
-- `GET /admin/courses/:id`
-- `PUT /admin/courses/:id`
-- `DELETE /admin/courses/:id`
-- `POST /admin/courses/generate-slug`
-- `POST /admin/courses/validate`
-- `POST /admin/upload`
-- `POST /admin/upload/thumbnail`
-- `GET /admin/music-notes`
-- `POST /admin/music-notes`
-- `GET /admin/music-notes/:id`
-- `PUT /admin/music-notes/:id`
-- `DELETE /admin/music-notes/:id`
-
-## Frontend Routes
-
-- `/`
-- `/About-Us`
-- `/Contact-Us`
-- `/Notes`
-- `/music-notes/:noteId`
-- `/login`
-- `/register`
-- `/dashboard/admin`
-
-## Environment Variables (Backend)
-
-Create `Backend/.env` and set:
-
-```env
-MONGODB_URL=
-PORT=5000
-
-BREVO_API=
-FROM_EMAIL=
-
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-
-JWT_SECRET=
-SESSION_SECRET=
-
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_CALLBACK_URL=
-CLIENT_URL=
-```
-
-Example values for local development:
-- `PORT=5000`
-- `CLIENT_URL=http://localhost:5173`
-- `GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback`
-
-## Local Development Setup
-
-### 1) Install dependencies
+### 1. Clone & Install
 
 ```bash
+# Install backend dependencies
 cd Backend
 npm install
 
+# Install frontend dependencies
 cd ../Frontend
 npm install
 ```
 
-### 2) Run backend
+### 2. Configure Environment
 
 ```bash
+# Backend
 cd Backend
-npm run dev
+cp .env.example .env
+# Fill in your values (MongoDB URL, JWT secret, etc.)
 ```
 
-Backend starts at `http://localhost:5000`.
+**Minimum required to run:**
+```env
+MONGODB_URL=mongodb+srv://user:pass@cluster.mongodb.net/raadhyam
+JWT_SECRET=any_random_string_32_chars_min
+SESSION_SECRET=another_random_string
+CLIENT_URL=http://localhost:5173
+```
 
-### 3) Run frontend
+### 3. Run
 
 ```bash
+# Terminal 1 — Backend
+cd Backend
+npm run dev        # runs on http://localhost:5000
+
+# Terminal 2 — Frontend
 cd Frontend
-npm run dev
+npm run dev        # runs on http://localhost:5173
 ```
 
-Frontend starts at `http://localhost:5173` (default Vite port).
+### 4. Default Admin Login
 
-Note: `Frontend/vite.config.js` proxies `/api` requests to `http://localhost:5000`.
+When the backend starts for the first time, it seeds an admin account:
 
-## Available Scripts
+| Field    | Value                  |
+|----------|------------------------|
+| Email    | `admin@raadhyam.com`   |
+| Password | `Admin@1234`           |
 
-### Backend (`Backend/package.json`)
-- `npm run dev` - Run server with nodemon
-- `npm start` - Run server with nodemon
+---
 
-### Frontend (`Frontend/package.json`)
-- `npm run dev` - Start Vite dev server
-- `npm run build` - Build production bundle
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
+## Features
 
-## Authentication Notes
+### Public Pages
+- Home, About Us, Courses, Music Notes, Contact
 
-- JWT token is issued on login and Google callback.
-- Protected API routes accept token from `Authorization` header or `auth_token` cookie.
-- Single active session is enforced: when a new login updates `currentToken`, old tokens become invalid.
+### Authentication
+- Email + Password login with CAPTCHA
+- Google OAuth sign-in
+- OTP-based forgot password (email → 6-digit OTP → new password)
+- JWT tokens stored in localStorage
 
-## Deployment Notes
+### Admin Dashboard (`/dashboard/admin`)
+- Overview stats (courses, enrollments, students, revenue)
+- Course management — create, edit, publish, add modules & lessons
+- Music Notes management — upload tabs, lyrics, notation
+- Student management — view profiles, enrollment history, progress
 
-- Set `NODE_ENV=production` for secure cookie behavior in OAuth callback.
-- Configure CORS and cookie settings for your frontend domain.
-- Ensure Cloudinary and MongoDB credentials are set in environment variables.
+### Student Portal (`/dashboard/home`)
+- Dashboard with enrolled courses and notes preview
+- Explore Courses — browse, view details, enroll
+- My Courses — enrolled courses with progress tracking
+- Course Viewer — module/lesson navigation, video playback
+- Music Notes — view tabs, lyrics, download
 
-## Known Improvement Areas
+---
 
-- Add API docs (OpenAPI/Swagger)
-- Add automated tests (unit + integration)
-- Add role-based guards for admin-only frontend routes
-- Replace placeholder `Frontend/README.md` template with project-specific frontend docs
+## Environment Variables
+
+### Backend (`Backend/.env`)
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `MONGODB_URL` | ✅ | MongoDB Atlas connection string |
+| `JWT_SECRET` | ✅ | Secret for signing JWT tokens |
+| `SESSION_SECRET` | ✅ | Secret for express-session |
+| `CLIENT_URL` | ✅ | Frontend URL for CORS (`http://localhost:5173`) |
+| `PORT` | ❌ | Server port (default: 5000) |
+| `EMAIL_USER` | ❌ | Gmail address for OTP emails |
+| `EMAIL_PASS` | ❌ | Gmail App Password (not login password) |
+| `CLOUDINARY_CLOUD_NAME` | ❌ | Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | ❌ | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | ❌ | Cloudinary API secret |
+| `GOOGLE_CLIENT_ID` | ❌ | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | ❌ | Google OAuth client secret |
+| `GOOGLE_CALLBACK_URL` | ❌ | OAuth callback URL |
+
+### Frontend (`Frontend/.env`)
+
+The frontend proxies all `/api` requests to the backend via `vite.config.js`. No `.env` is required for local development.
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_API_URL` | Override backend URL (production only) |
+
+---
+
+## Email Setup (OTP)
+
+To enable OTP emails for forgot password:
+
+1. Enable 2-Step Verification on your Google account
+2. Go to **Google Account → Security → App Passwords**
+3. Create an App Password for "Mail"
+4. Add to `.env`:
+   ```env
+   EMAIL_USER=your@gmail.com
+   EMAIL_PASS=xxxx xxxx xxxx xxxx
+   ```
+
+> **Dev mode**: If email is not configured, the OTP is returned in the API response and auto-filled in the form for testing.
+
+---
+
+## Adding Course Content (Admin)
+
+1. Admin → **Courses** → click **⚙ Manage** on a course
+2. Click **"Add Module"** → enter title + description
+3. Inside the module, click **+** → **Add Lesson**
+4. Enter lesson title, choose type (Video / PDF / Text)
+5. For video: paste a YouTube URL or direct video link
+6. Save — content is immediately available to enrolled students
+
+---
+
+## API Routes
+
+### Auth
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/api/auth/register` | Register new user |
+| POST | `/api/auth/login` | Login |
+| POST | `/api/auth/send-otp` | Send OTP to email |
+| POST | `/api/auth/verify-otp` | Verify OTP |
+| POST | `/api/auth/reset-password-otp` | Reset password with token |
+| GET  | `/api/auth/check-auth` | Verify JWT token |
+
+### Courses (Public)
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/courses` | List published courses |
+| GET | `/api/courses/:id` | Get course with modules/lessons |
+
+### Admin (requires admin JWT)
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/admin/dashboard/stats` | Dashboard statistics |
+| GET/POST | `/api/admin/courses` | List / create courses |
+| PUT/DELETE | `/api/admin/courses/:id` | Update / delete course |
+| GET/POST | `/api/admin/music-notes` | List / create notes |
+| GET | `/api/admin/users` | List all users |
+| GET | `/api/admin/users/:id` | User detail with enrollment stats |
+
+### User Dashboard (requires user JWT)
+| Method | Route | Description |
+|--------|-------|-------------|
+| GET | `/api/user/courses` | Get enrolled courses |
+| POST | `/api/user/enroll` | Enroll in a course |
+| GET | `/api/music-notes` | Get all music notes |
+
+---
+
+## Deployment
+
+### Backend (e.g. Railway / Render)
+1. Set all environment variables in the platform dashboard
+2. Set `NODE_ENV=production`
+3. Start command: `node server.js`
+
+### Frontend (e.g. Vercel / Netlify)
+1. Build: `npm run build`
+2. Set `VITE_API_URL=https://your-backend-url.com`
+3. Update `CLIENT_URL` in backend `.env` to your frontend domain
+
+---
 
 ## License
 
-No license file is currently defined in the repository.
-New PR change
+MIT — built for Raadhyam Musical Classes.

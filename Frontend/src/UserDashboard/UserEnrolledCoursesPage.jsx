@@ -66,7 +66,13 @@ const UserEnrolledCoursesPage = ({ setActiveTab }) => {
         </div>
       ) : (
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:'1.25rem' }}>
-          {filtered.map((c, i) => (
+          {filtered.map((c, i) => {
+            const progress = Math.max(0, Math.min(100, Number(c?.enrollment?.progress || 0)));
+            const completedCount = Number(c?.enrollment?.completedCount || 0);
+            const totalLessons = Number(c?.enrollment?.totalLessons || 0);
+            const hasLessonCounts = totalLessons > 0;
+
+            return (
             <div key={i} style={{ background:'#fff', borderRadius:16, overflow:'hidden', border:'1px solid #F1F5F9', boxShadow:'0 2px 12px rgba(30,41,59,0.05)', transition:'transform 0.2s, box-shadow 0.2s' }}
               onMouseEnter={e=>{ e.currentTarget.style.transform='translateY(-4px)'; e.currentTarget.style.boxShadow='0 12px 32px rgba(217,119,6,0.14)'; }}
               onMouseLeave={e=>{ e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow='0 2px 12px rgba(30,41,59,0.05)'; }}>
@@ -79,7 +85,7 @@ const UserEnrolledCoursesPage = ({ setActiveTab }) => {
                   {c.level && <span style={{ fontSize:'0.7rem', fontWeight:700, color:AMBER, background:'rgba(217,119,6,0.1)', border:'1px solid rgba(217,119,6,0.2)', borderRadius:20, padding:'2px 10px', fontFamily:SANS }}>{c.level}</span>}
                   {c.category && <span style={{ fontSize:'0.7rem', fontWeight:700, color:'#8B5CF6', background:'rgba(139,92,246,0.08)', border:'1px solid rgba(139,92,246,0.2)', borderRadius:20, padding:'2px 10px', fontFamily:SANS }}>{c.category}</span>}
                   <span style={{ fontSize:'0.7rem', fontWeight:700, color:'#10B981', background:'rgba(16,185,129,0.08)', border:'1px solid rgba(16,185,129,0.2)', borderRadius:20, padding:'2px 10px', fontFamily:SANS }}>✓ Enrolled</span>
-                  {Number(c?.enrollment?.progress || 0) >= 100 && (
+                  {progress >= 100 && (
                     <span style={{ fontSize:'0.7rem', fontWeight:700, color:'#0F766E', background:'rgba(20,184,166,0.1)', border:'1px solid rgba(20,184,166,0.25)', borderRadius:20, padding:'2px 10px', fontFamily:SANS }}>🏆 Completed</span>
                   )}
                 </div>
@@ -88,12 +94,15 @@ const UserEnrolledCoursesPage = ({ setActiveTab }) => {
                 <div style={{ marginBottom:'0.9rem' }}>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:5 }}>
                     <span style={{ fontSize:'0.74rem', color:MUTED, fontFamily:SANS, fontWeight:600 }}>Progress</span>
-                    <span style={{ fontSize:'0.74rem', color: Number(c?.enrollment?.progress || 0) >= 100 ? '#0F766E' : AMBER, fontFamily:SANS, fontWeight:700 }}>
-                      {Math.max(0, Math.min(100, Number(c?.enrollment?.progress || 0)))}%
+                    <span style={{ fontSize:'0.74rem', color: progress >= 100 ? '#0F766E' : AMBER, fontFamily:SANS, fontWeight:700 }}>
+                      {progress}%
                     </span>
                   </div>
                   <div style={{ height:7, borderRadius:999, background:'#E2E8F0', overflow:'hidden' }}>
-                    <div style={{ width:`${Math.max(0, Math.min(100, Number(c?.enrollment?.progress || 0)))}%`, height:'100%', background: Number(c?.enrollment?.progress || 0) >= 100 ? 'linear-gradient(135deg,#14B8A6,#0F766E)' : `linear-gradient(135deg,${AMBER},#B45309)` }} />
+                    <div style={{ width:`${progress}%`, height:'100%', background: progress >= 100 ? 'linear-gradient(135deg,#14B8A6,#0F766E)' : `linear-gradient(135deg,${AMBER},#B45309)` }} />
+                  </div>
+                  <div style={{ fontSize:'0.72rem', color:MUTED, fontFamily:SANS, marginTop:6 }}>
+                    {hasLessonCounts ? `${completedCount}/${totalLessons} lessons completed` : 'Course lesson details unavailable'}
                   </div>
                 </div>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
@@ -106,7 +115,7 @@ const UserEnrolledCoursesPage = ({ setActiveTab }) => {
                 </div>
               </div>
             </div>
-          ))}
+          );})}
         </div>
       )}
     </div>
